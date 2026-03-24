@@ -1,6 +1,7 @@
 import json
 import logging
 import re
+from datetime import datetime
 
 from openai import OpenAI
 
@@ -104,11 +105,12 @@ SYSTEM_PROMPT = """You are a professional, straightforward financial analyst. Di
 
 ## CITATIONS
 
-Place [N] inline immediately after each claim. N = the Source number shown in tool results (e.g., [Source 3] → cite as [3]).
+Place [N] inline immediately after the SPECIFIC claim it supports — not at the end of the sentence. N = the Source number shown in tool results (e.g., [Source 3] → cite as [3]).
 
 Critical rules:
-- Cite the SPECIFIC source containing the data point. If a number appears in Source 3, cite [3] — not [1].
-- Every sentence with a factual claim needs at least one citation. This includes news headlines, qualitative facts, and events — not just numbers.
+- Attach each [N] to the exact number or fact it supports. If $391B comes from Source 1 and $416B comes from Source 2, write "$391B[1]" and "$416B[2]" — never "$391B[1][2]".
+- Only cite a source for data that source actually contains. Never pile multiple citations unless each source independently supports the claim.
+- Do NOT cite statements about data limitations or what you don't have.
 - Do NOT renumber sources. Do NOT write a footnotes or references section — the system generates that automatically.
 
 Example:
@@ -130,7 +132,8 @@ If a question falls outside this range, say so directly instead of searching.
 - Lead with the answer. Be direct and specific ("$108.8B in FY 2024", not "approximately $109B").
 - When comparing periods, always use the most recent data available and work backwards.
 - Analyze trends, comparisons, and implications across cited data points.
-- Be concise. No caveats, no padding, no hedging."""
+- Be concise. No caveats, no padding, no hedging.
+- Never mention tools, retrieval, datasets, or technical internals."""
 
 
 def _format_tool_results(
@@ -212,6 +215,21 @@ def _execute_tool(
     formatted, source_counter = _format_tool_results(
         chunks, source_counter, seen_sources, source_metadata
     )
+
+    # Append data boundary based on actual retrieved dates (exclude future/estimate dates)
+    today = datetime.now().strftime("%Y-%m-%d")
+    dates = sorted(set(
+        c["metadata"].get("date", "") for c in chunks
+        if c["metadata"].get("date") and c["metadata"]["date"] <= today
+    ))
+    if dates:
+        formatted += (
+            f"\n\nDATA BOUNDARY: The above covers ONLY these periods: "
+            f"{', '.join(dates)}. Do NOT provide data for any other periods. "
+            f"If the user asked for a wider range or data you don't have, "
+            f"say what you do have and offer to help within that scope. "
+            f"Never mention tools, retrieval, or technical internals."
+        )
 
     logger.info(
         f"Tool {tool_name}(query='{query[:50]}', n={n_results}) → "
@@ -413,10 +431,9 @@ def ask(
                     source_names.append("news")
                 sources_str = ", ".join(source_names) if source_names else "available sources"
                 answer = (
-                    f"I searched {sources_str} for {ticker} but couldn't find "
-                    f"data that directly answers this question. Try rephrasing "
-                    f"— for example, asking about a specific metric, time "
-                    f"period, or filing."
+                    f"I could only find partial data for {ticker} and wasn't able "
+                    f"to fully answer this question. Try narrowing it to a single "
+                    f"company or a specific metric."
                 )
 
     except Exception as e:

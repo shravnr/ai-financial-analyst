@@ -2,8 +2,6 @@ import json
 import logging
 import random
 import time
-from datetime import date
-
 from openai import OpenAI
 from rich.console import Console
 from rich.markdown import Markdown
@@ -36,33 +34,19 @@ _ROUTER_PROMPT = """\
 You are a professional, straightforward financial analyst. No fluff — direct and concise. Classify the user's message and respond as JSON.
 
 If they're asking about a specific company's financials, stock, or business:
-  {{"type": "financial", "ticker": "AAPL", "company": "Apple", "in_scope": true}}
+  {{"type": "financial", "ticker": "AAPL", "company": "Apple"}}
 
 If they mention a company you can't resolve to a US ticker:
-  {{"type": "financial", "ticker": null, "company": "Acme Corp", "in_scope": false}}
+  {{"type": "financial", "ticker": null, "company": "Acme Corp"}}
 
 If they're asking a financial question but don't mention which company:
-  {{"type": "financial", "ticker": null, "company": null, "in_scope": true}}
+  {{"type": "financial", "ticker": null, "company": null}}
 
 If they're saying goodbye or ending the conversation:
   {{"type": "farewell", "response": "a warm goodbye, 1 sentence"}}
 
 If they're making casual conversation (greeting, thanks, chitchat, anything else):
   {{"type": "chat", "response": "a brief, professional reply (1 sentence) that steers toward asking about a company"}}
-
-## DATA BOUNDARIES (for in_scope check)
-The system has ONLY:
-- ~2 most recent fiscal years of financial data and SEC filings (10-K, 10-Q, 8-K)
-- ~30 days of news articles
-- Today's date: {current_date}
-
-Set "in_scope": false with a "boundary_message" if the question asks for ANY data beyond the ~2 year window. The boundary_message should be a direct, professional 1-2 sentence response: state what data you DO have, and offer to answer within that scope. No fluff.
-
-Examples:
-- "revenue in 2015" → false
-- "past 3 years", "5-year trend", "since 2010" → false
-- "last 2 years", "recent earnings", "latest quarter" → true
-- General questions ("what are the risks?", "revenue breakdown") → true
 
 Only return US-listed tickers."""
 
@@ -71,11 +55,10 @@ _llm_client = OpenAI(api_key=OPENAI_API_KEY)
 
 def _route_input(user_message: str) -> dict:
     try:
-        prompt = _ROUTER_PROMPT.format(current_date=date.today().isoformat())
         resp = _llm_client.chat.completions.create(
             model=LLM_MODEL_MINI,
             messages=[
-                {"role": "system", "content": prompt},
+                {"role": "system", "content": _ROUTER_PROMPT},
                 {"role": "user", "content": user_message},
             ],
             response_format={"type": "json_object"},
@@ -232,17 +215,6 @@ def main():
                         continue
                 else:
                     current_ticker = ticker
-
-            # Skip main LLM call if question is out of data scope
-            if not route.get("in_scope", True):
-                msg = route.get(
-                    "boundary_message",
-                    f"I only have ~2 years of financial data and SEC filings for {current_ticker}, "
-                    f"plus ~30 days of news. Try asking about recent financials instead."
-                )
-                console.print(f"\n[bold green]analyst >[/bold green] {msg}")
-                console.print()
-                continue
 
             console.print(f"\n[bold green]analyst >[/bold green] [dim]{random.choice(_THINKING_MESSAGES)}[/dim]")
             result = ask(user_input, current_ticker)
