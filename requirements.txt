@@ -1,0 +1,27 @@
+# LLM and embeddings
+openai>=1.0.0
+tiktoken
+
+# Vector store
+chromadb>=0.4.0
+
+# LangChain (used in Phase 2-3 for chunking and RAG chain)
+langchain>=0.2.0
+langchain-openai>=0.1.0
+langchain-community>=0.2.0
+
+# Data fetching and parsing
+requests
+beautifulsoup4
+lxml
+
+# Structured data
+pandas
+
+# Environment
+python-dotenv
+
+# CLI output
+rich
+
+# Evaluation (Phase 5) — self-contained, no external framework
