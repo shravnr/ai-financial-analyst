@@ -11,7 +11,7 @@ FMP_API_KEY = os.getenv("FMP_API_KEY", "")
 NEWS_API_KEY = os.getenv("NEWS_API_KEY", "")
 
 #  SEC EDGAR
-SEC_EDGAR_USER_AGENT = "Shravan ramamoorthyshravan6@gmail.com"
+SEC_EDGAR_USER_AGENT = os.getenv("SEC_EDGAR_USER_AGENT", "YourName your@email.com")
 SEC_BASE_URL = "https://data.sec.gov"
 SEC_EFTS_URL = "https://efts.sec.gov/LATEST"
 SEC_ARCHIVES_URL = "https://www.sec.gov/Archives/edgar/data"
