@@ -12,6 +12,7 @@ sys.path.insert(0, str(project_root))
 from openai import OpenAI
 
 from src.config import OPENAI_API_KEY, EVAL_MODEL, LLM_MODEL_MINI
+from src.guardrails.validator import verify_numbers
 from src.rag.chain import ask
 from src.evaluation.test_questions import (
     CONSISTENCY_PAIRS,
@@ -25,7 +26,6 @@ from src.processing.pipeline import process_company
 
 logger = logging.getLogger(__name__)
 
-# ── Ticker pool ──────────────────────────────────────────────────────
 EVAL_TICKERS = ["AAPL", "MSFT", "GOOGL", "AMZN"]
 DEEP_EVAL_TICKER = "AMZN"
 
@@ -43,7 +43,6 @@ def _company_name(ticker: str) -> str:
 _client = OpenAI(api_key=OPENAI_API_KEY)
 
 
-# ── Rule-based helpers ───────────────────────────────────────────────
 
 def _count_citations(text: str) -> int:
     return len(re.findall(r"\[\d+\]", text))
@@ -53,61 +52,6 @@ def _has_dollar_amounts(text: str) -> bool:
     return bool(re.search(r"\$[\d,.]+\s*(billion|million|trillion|B|M)?", text))
 
 
-def _numbers_in_context(answer: str, context: str) -> dict:
-    """Check that dollar amounts in the answer actually appear in the context."""
-    answer_amounts = re.findall(r"\$([\d,.]+)", answer)
-    if not answer_amounts or not context:
-        return {"total": 0, "verified": 0}
-
-    # Collect all context numbers once
-    ctx_vals: list[float] = []
-    for ctx_match in re.findall(r"([\d,.]+)", context):
-        try:
-            v = float(ctx_match.replace(",", ""))
-            if v > 0:
-                ctx_vals.append(v)
-        except ValueError:
-            continue
-
-    verified = 0
-    for amt_str in answer_amounts:
-        try:
-            amt = float(amt_str.replace(",", ""))
-        except ValueError:
-            continue
-
-        found = False
-        # 1. Direct numeric match (1% tolerance)
-        for ctx_val in ctx_vals:
-            if abs(amt - ctx_val) / ctx_val <= 0.01:
-                found = True
-                break
-
-        # 2. Arithmetic derivation (difference, sum, ratio of two context numbers)
-        if not found:
-            for i, a in enumerate(ctx_vals):
-                for b in ctx_vals[i + 1:]:
-                    for derived in (a - b, b - a, a + b):
-                        if derived > 0 and abs(amt - derived) / derived < 0.01:
-                            found = True
-                            break
-                    if not found and b != 0:
-                        for ratio in (a / b, b / a):
-                            if ratio > 0 and abs(amt - ratio) / ratio < 0.01:
-                                found = True
-                                break
-                    if found:
-                        break
-                if found:
-                    break
-
-        if found:
-            verified += 1
-
-    return {"total": len(answer_amounts), "verified": verified}
-
-
-# ── LLM judges ──────────────────────────────────────────────────────
 
 _GROUNDING_SYSTEM = """You are an expert evaluator assessing whether an AI financial analyst's answer is factually grounded in the retrieved source data.
 
@@ -177,7 +121,7 @@ def _call_judge(messages: list[dict], label: str = "judge", model: str = EVAL_MO
                 messages=messages,
                 response_format={"type": "json_object"},
                 temperature=0,
-                max_tokens=200,
+                max_completion_tokens=200,
             )
             result = json.loads(response.choices[0].message.content)
             return {
@@ -245,7 +189,6 @@ Return JSON:
 
 
 def _judge_refusal(answer: str) -> dict:
-    """Use LLM mini to classify whether an answer is a refusal."""
     result = _call_judge(
         messages=[
             {"role": "system", "content": _REFUSAL_SYSTEM},
@@ -261,10 +204,8 @@ def _judge_refusal(answer: str) -> dict:
     }
 
 
-# ── Deep eval ────────────────────────────────────────────────────────
 
 def run_deep_eval(ticker: str = "AAPL") -> dict:
-    """Full 3-signal evaluation: consistency, grounding, accuracy."""
     ticker = ticker.upper()
 
     print(f"\n{'='*60}")
@@ -278,8 +219,8 @@ def run_deep_eval(ticker: str = "AAPL") -> dict:
     total_pipeline_tokens = 0
     total_judge_tokens = 0
 
-    # ── Signal 1: Consistency ────────────────────────────────────────
-    print(f"  ── Signal 1: CONSISTENCY ──\n")
+    #  Signal 1: Consistency 
+    print(f"---- Signal 1: CONSISTENCY \n")
 
     company = _company_name(ticker)
 
@@ -329,8 +270,8 @@ def run_deep_eval(ticker: str = "AAPL") -> dict:
                 "passed": False,
             })
 
-    # ── Signal 2 & 3: Grounding + Accuracy ───────────────────────────
-    print(f"\n  ── Signal 2: GROUNDING + Signal 3: ACCURACY ──\n")
+    #  Signal 2 & 3: Grounding + Accuracy 
+    print(f"\n---- Signal 2: GROUNDING + Signal 3: ACCURACY \n")
 
     for i, (capability, question_tpl, _) in enumerate(GROUNDING_QUESTIONS, 1):
         question = question_tpl.format(company=company)
@@ -345,20 +286,21 @@ def run_deep_eval(ticker: str = "AAPL") -> dict:
             total_pipeline_tokens += tokens
 
             citations = _count_citations(answer)
-            num_check = _numbers_in_context(answer, context)
+            num_check = verify_numbers(answer, context)
 
             judge = _judge_grounding(question, answer, context)
             total_judge_tokens += judge.get("tokens", 0)
 
             grounding_passed = judge["score"] >= 4
             has_citations = citations > 0
+            all_nums_verified = num_check["total"] == 0 or len(num_check["unverified_amounts"]) == 0
 
             status_parts = [
                 f"ground={judge['score']}/5",
                 f"{citations} cites",
                 f"nums={num_check['verified']}/{num_check['total']}",
             ]
-            overall = "PASS" if (grounding_passed and has_citations) else "FAIL"
+            overall = "PASS" if (grounding_passed and has_citations and all_nums_verified) else "FAIL"
             print(f"      → {', '.join(status_parts)}  {overall}")
 
             grounding_results.append({
@@ -391,7 +333,7 @@ def run_deep_eval(ticker: str = "AAPL") -> dict:
                 "numbers_verified": 0,
             })
 
-    # ── Aggregate stats for return dict ──────────────────────────────
+    #  Aggregate stats for return dict 
     cons_passed = sum(1 for r in consistency_results if r["passed"])
     cons_scores = [r["score"] for r in consistency_results if r["score"] > 0]
     avg_cons = sum(cons_scores) / len(cons_scores) if cons_scores else 0
@@ -439,10 +381,8 @@ def run_deep_eval(ticker: str = "AAPL") -> dict:
     }
 
 
-# ── Auto-ingest helper ───────────────────────────────────────────────
 
 def _ensure_indexed(ticker: str) -> bool:
-    """Ingest + process a ticker if not already indexed. Returns success."""
     if is_ticker_indexed(ticker):
         return True
     print(f"\n  ⏳ {ticker} not indexed yet — fetching & indexing now (≈30-60s, one-time only)...\n")
@@ -455,10 +395,8 @@ def _ensure_indexed(ticker: str) -> bool:
         return False
 
 
-# ── Smoke test ───────────────────────────────────────────────────────
 
 def run_smoke_test(tickers: list[str] | None = None) -> dict:
-    """Lightweight breadth test: 3 questions per ticker + boundary refusals."""
 
     smoke_tickers = [t.upper() for t in (tickers or [])]
 
@@ -477,10 +415,10 @@ def run_smoke_test(tickers: list[str] | None = None) -> dict:
     boundary_results = []
     total_tokens = 0
 
-    # ── Normal questions per ticker ──────────────────────────────────
+    #  Normal questions per ticker 
     for ticker in smoke_tickers:
         ticker = ticker.upper()
-        print(f"  ── {ticker} ──\n")
+        print(f"   {ticker} \n")
 
         results = []
         for i, (capability, question_template, _) in enumerate(SMOKE_QUESTIONS, 1):
@@ -523,8 +461,8 @@ def run_smoke_test(tickers: list[str] | None = None) -> dict:
         ticker_results[ticker] = results
         print()
 
-    # ── Boundary refusals ────────────────────────────────────────────
-    print(f"  ── Boundary refusals ──\n")
+    #  Boundary refusals 
+    print(f"---- Boundary refusals \n")
 
     for i, (name, question) in enumerate(BOUNDARY_REFUSALS, 1):
         print(f"  [{i}/{len(BOUNDARY_REFUSALS)}] {name}...")
@@ -585,10 +523,8 @@ def run_smoke_test(tickers: list[str] | None = None) -> dict:
     }
 
 
-# ── Unified scorecard ────────────────────────────────────────────────
 
 def _print_scorecard(deep: dict, smoke: dict) -> dict:
-    """Print unified scorecard and return scores dict for JSON output."""
     d = deep["signals"]
 
     # Sub-score inputs
@@ -635,12 +571,12 @@ def _print_scorecard(deep: dict, smoke: dict) -> dict:
     print(f"{'═'*60}\n")
     print(f"  Master Score:        {master} / 10\n")
 
-    print(f"  ── LLM-as-judge (avg: {llm_score}) ──")
+    print(f"   LLM-as-judge (avg: {llm_score}) ")
     print(f"  Consistency:  {consistency_score:>4} / 10   ({cons_passed}/{total_cons} pairs, avg {avg_cons:.2f}/5)")
     print(f"  Grounding:    {grounding_score:>4} / 10   ({well_grounded}/{total_ground} well-grounded, avg {avg_ground:.2f}/5)")
     print(f"  Boundary:     {boundary_score:>4} / 10   ({boundary_passed}/{boundary_total} refusals)")
 
-    print(f"\n  ── Rule-based (avg: {rule_score}) ──")
+    print(f"\n   Rule-based (avg: {rule_score}) ")
     print(f"  Verification: {verification_score:>4} / 10   ({cited}/{total_ground} cited, {nums_verified}/{nums_total} nums verified)")
     if has_smoke:
         print(f"  Smoke:        {smoke_score:>4} / 10   ({smoke_passed}/{smoke_total} passed)")
@@ -667,7 +603,7 @@ def _print_scorecard(deep: dict, smoke: dict) -> dict:
                 failures.append(f"  Smoke: {r['question'][:40]}... ({r['source_count']} source(s) \u2014 thin data)")
 
     if failures:
-        print(f"\n  ── Failures ──")
+        print(f"\n   Failures ")
         for f in failures:
             print(f"  {f}")
 
@@ -693,10 +629,9 @@ def _print_scorecard(deep: dict, smoke: dict) -> dict:
     }
 
 
-# ── CLI ──────────────────────────────────────────────────────────────
 
 if __name__ == "__main__":
-    logging.basicConfig(level=logging.WARNING)
+    logging.basicConfig(level=logging.ERROR)
     import random
 
     # Ensure deep eval ticker is indexed
@@ -712,7 +647,7 @@ if __name__ == "__main__":
 
     scores = _print_scorecard(deep, smoke)
 
-    # ── Save combined results ────────────────────────────────────────
+    #  Save combined results 
     eval_dir = project_root / "eval_results"
     eval_dir.mkdir(exist_ok=True)
     output_file = eval_dir / f"eval_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"

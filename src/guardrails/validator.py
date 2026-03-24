@@ -45,10 +45,7 @@ def _check_citations(answer: str) -> list[str]:
     return warnings
 
 
-def _check_numbers_in_context(answer: str, context: str) -> list[str]:
-    warnings = []
-
-    # Extract all dollar amounts from context for numeric comparison
+def verify_numbers(answer: str, context: str) -> dict:
     context_amounts = set()
     for m in re.finditer(r"\$([\d,.]+)\s*(billion|million|trillion|thousand|B|M|T|K)?", context):
         try:
@@ -65,15 +62,16 @@ def _check_numbers_in_context(answer: str, context: str) -> list[str]:
             context_amounts.add(val)
         except ValueError:
             pass
-    # Also extract raw large numbers from context (e.g., from SEC filings)
     for m in re.finditer(r"[\$]?([\d,]{10,})", context):
         try:
             context_amounts.add(float(m.group(1).replace(",", "")))
         except ValueError:
             pass
 
-    # Extract dollar amounts from the answer
     answer_amounts = re.findall(r"\$([\d,.]+)\s*(billion|million|trillion|thousand|B|M|T|K)?", answer)
+
+    verified = 0
+    unverified_amounts = []
 
     for amount_str, unit in answer_amounts:
         clean = amount_str.replace(",", "")
@@ -128,7 +126,7 @@ def _check_numbers_in_context(answer: str, context: str) -> list[str]:
                                 if derived > 0 and abs(val - derived) / derived < 0.01:
                                     found = True
                                     break
-                            if not found and b != 0:
+                            if not found and a != 0 and b != 0:
                                 for ratio in (a / b, b / a):
                                     if ratio > 0 and abs(val - ratio) / ratio < 0.01:
                                         found = True
@@ -140,13 +138,21 @@ def _check_numbers_in_context(answer: str, context: str) -> list[str]:
             except ValueError:
                 pass
 
-        if not found:
-            warnings.append(
-                f"Unverified number: ${amount_str} {unit or ''} appears in the answer "
-                f"but could not be matched in the retrieved context."
-            )
+        if found:
+            verified += 1
+        else:
+            unverified_amounts.append((amount_str, unit))
 
-    return warnings
+    return {"total": len(answer_amounts), "verified": verified, "unverified_amounts": unverified_amounts}
+
+
+def _check_numbers_in_context(answer: str, context: str) -> list[str]:
+    result = verify_numbers(answer, context)
+    return [
+        f"Unverified number: ${amt} {unit or ''} appears in the answer "
+        f"but could not be matched in the retrieved context."
+        for amt, unit in result["unverified_amounts"]
+    ]
 
 
 def _check_sufficiency(answer: str, chunk_count: int) -> list[str]:
@@ -169,7 +175,7 @@ def _check_sufficiency(answer: str, chunk_count: int) -> list[str]:
     return warnings
 
 
-#  LLM Grounding Check
+# LLM grounding — checks if top claims are supported by retrieved context
 
 _GROUNDING_SYSTEM = """You are a fact-checking assistant. Given an AI-generated answer about a company's finances and the source context that was provided to the AI, check whether key factual claims in the answer are actually supported by the sources.
 
@@ -186,15 +192,19 @@ Return JSON:
   ]
 }
 
-Be strict: a claim is only "supported" if the context contains information that directly backs it. Reasonable rounding (e.g., $393.9B reported as ~$394B) is acceptable. But a claim with no basis in the context is NOT supported."""
+Be strict but fair: a claim is "supported" if:
+1. The context contains the information directly, OR
+2. The claim is a derived metric (margin, growth rate, ratio, difference) computable from numbers present in the context.
+
+For example, if context contains revenue of $100B and operating income of $30B, then a claim of "30% operating margin" IS supported — the source numbers are there.
+
+Reasonable rounding (e.g., $393.9B reported as ~$394B) is acceptable. But a claim with no basis in the context is NOT supported."""
 
 
 def _llm_grounding_check(answer: str, context: str) -> list[str]:
-    # Skip if answer is very short (likely a refusal)
     if len(answer) < 100:
         return []
 
-    # Truncate context to fit in mini's context window cost-effectively
     ctx_truncated = context[:8000] if len(context) > 8000 else context
 
     try:
@@ -206,7 +216,7 @@ def _llm_grounding_check(answer: str, context: str) -> list[str]:
             ],
             response_format={"type": "json_object"},
             temperature=0,
-            max_tokens=500,
+            max_completion_tokens=500,
         )
 
         result = json.loads(response.choices[0].message.content)
@@ -234,16 +244,13 @@ def validate_response(
     answer: str,
     context: str,
     chunk_count: int,
-    use_llm_grounding: bool = True,
 ) -> dict:
     checks = {
         "citation_check": _check_citations(answer),
         "number_verification": _check_numbers_in_context(answer, context),
         "sufficiency_check": _check_sufficiency(answer, chunk_count),
+        "grounding_check": _llm_grounding_check(answer, context),
     }
-
-    if use_llm_grounding:
-        checks["grounding_check"] = _llm_grounding_check(answer, context)
 
     all_warnings = []
     for check_warnings in checks.values():

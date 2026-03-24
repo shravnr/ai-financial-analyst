@@ -51,13 +51,11 @@ def _fmt_number(value) -> str:
         return str(value)
 
 
-# ── Formatters for each data type ─────────────────────────────────────
 
 def _format_profile(data: dict, ticker: str) -> list[dict]:
     if not data:
         return []
 
-    # Handle list or dict
     record = data[0] if isinstance(data, list) else data
 
     text = f"""{record.get('companyName', ticker)} ({ticker}) — Company Profile
@@ -95,10 +93,10 @@ def _format_income_statement(records: list[dict], ticker: str, period: str) -> l
     results = []
     for i, r in enumerate(records or []):
         date = r.get("date", r.get("fillingDate", "Unknown"))
-        cal_year = r.get("calendarYear", "")
+        fiscal_year = r.get("fiscalYear") or r.get("calendarYear") or ""
         period_label = r.get("period", period)
 
-        text = f"""{ticker} — Income Statement ({period_label} {cal_year}, ending {date})
+        text = f"""{ticker} — Income Statement (FY {fiscal_year}, ending {date})
 
 Revenue: {_fmt_currency(r.get('revenue'))}
 Cost of Revenue: {_fmt_currency(r.get('costOfRevenue'))}
@@ -129,7 +127,7 @@ EBITDA: {_fmt_currency(r.get('ebitda'))}"""
                 "source_type": "fmp",
                 "document_type": "income_statement",
                 "date": date,
-                "section": f"Income Statement - {period_label} {cal_year}",
+                "section": f"Income Statement - FY {fiscal_year}",
                 "period": period,
                 "chunk_index": i,
             },
@@ -141,10 +139,10 @@ def _format_balance_sheet(records: list[dict], ticker: str, period: str) -> list
     results = []
     for i, r in enumerate(records or []):
         date = r.get("date", "Unknown")
-        cal_year = r.get("calendarYear", "")
+        fiscal_year = r.get("fiscalYear") or r.get("calendarYear") or ""
         period_label = r.get("period", period)
 
-        text = f"""{ticker} — Balance Sheet ({period_label} {cal_year}, ending {date})
+        text = f"""{ticker} — Balance Sheet (FY {fiscal_year}, ending {date})
 
 ASSETS
 Total Assets: {_fmt_currency(r.get('totalAssets'))}
@@ -182,7 +180,7 @@ Total Equity: {_fmt_currency(r.get('totalEquity'))}"""
                 "source_type": "fmp",
                 "document_type": "balance_sheet",
                 "date": date,
-                "section": f"Balance Sheet - {period_label} {cal_year}",
+                "section": f"Balance Sheet - FY {fiscal_year}",
                 "period": period,
                 "chunk_index": i,
             },
@@ -194,10 +192,10 @@ def _format_cash_flow(records: list[dict], ticker: str, period: str) -> list[dic
     results = []
     for i, r in enumerate(records or []):
         date = r.get("date", "Unknown")
-        cal_year = r.get("calendarYear", "")
+        fiscal_year = r.get("fiscalYear") or r.get("calendarYear") or ""
         period_label = r.get("period", period)
 
-        text = f"""{ticker} — Cash Flow Statement ({period_label} {cal_year}, ending {date})
+        text = f"""{ticker} — Cash Flow Statement (FY {fiscal_year}, ending {date})
 
 OPERATING ACTIVITIES
 Net Income: {_fmt_currency(r.get('netIncome'))}
@@ -229,7 +227,7 @@ Net Change in Cash: {_fmt_currency(r.get('netChangeInCash'))}"""
                 "source_type": "fmp",
                 "document_type": "cash_flow_statement",
                 "date": date,
-                "section": f"Cash Flow Statement - {period_label} {cal_year}",
+                "section": f"Cash Flow Statement - FY {fiscal_year}",
                 "period": period,
                 "chunk_index": i,
             },
@@ -289,65 +287,11 @@ Interest Coverage: {_fmt_number(r.get('interestCoverage'))}"""
     return results
 
 
-def _format_ratios(records: list[dict], ticker: str) -> list[dict]:
-    results = []
-    for i, r in enumerate(records or []):
-        date = r.get("date", "Unknown")
-        period_label = r.get("period", "annual")
-
-        text = f"""{ticker} — Financial Ratios ({period_label}, {date})
-
-Profitability
-Gross Margin: {_fmt_pct(r.get('grossProfitMargin'))}
-Operating Margin: {_fmt_pct(r.get('operatingProfitMargin'))}
-Net Profit Margin: {_fmt_pct(r.get('netProfitMargin'))}
-Return on Equity: {_fmt_pct(r.get('returnOnEquity'))}
-Return on Assets: {_fmt_pct(r.get('returnOnAssets'))}
-Return on Capital Employed: {_fmt_pct(r.get('returnOnCapitalEmployed'))}
-
-Liquidity
-Current Ratio: {_fmt_number(r.get('currentRatio'))}
-Quick Ratio: {_fmt_number(r.get('quickRatio'))}
-Cash Ratio: {_fmt_number(r.get('cashRatio'))}
-
-Leverage
-Debt Ratio: {_fmt_number(r.get('debtRatio'))}
-Debt-to-Equity: {_fmt_number(r.get('debtEquityRatio'))}
-Interest Coverage: {_fmt_number(r.get('interestCoverage'))}
-
-Efficiency
-Asset Turnover: {_fmt_number(r.get('assetTurnover'))}
-Inventory Turnover: {_fmt_number(r.get('inventoryTurnover'))}
-Receivables Turnover: {_fmt_number(r.get('receivablesTurnover'))}
-Payables Turnover: {_fmt_number(r.get('payablesTurnover'))}
-
-Valuation
-Price-to-Earnings: {_fmt_number(r.get('priceEarningsRatio'))}
-Price-to-Book: {_fmt_number(r.get('priceToBookRatio'))}
-Price-to-Sales: {_fmt_number(r.get('priceToSalesRatio'))}
-Price-to-Free-Cash-Flow: {_fmt_number(r.get('priceToFreeCashFlowsRatio'))}
-Dividend Yield: {_fmt_pct(r.get('dividendYield'))}
-Payout Ratio: {_fmt_pct(r.get('payoutRatio'))}"""
-
-        results.append({
-            "text": text,
-            "metadata": {
-                "ticker": ticker,
-                "source_type": "fmp",
-                "document_type": "financial_ratios",
-                "date": date,
-                "section": f"Financial Ratios - {period_label} {date}",
-                "chunk_index": i,
-            },
-        })
-    return results
-
-
 def _format_grades(records: list[dict], ticker: str) -> list[dict]:
     if not records:
         return []
 
-    # Group into chunks of ~15 grades each (one chunk = ~6 months of activity)
+    # ~15 grades per chunk (~6 months of activity)
     chunk_size = 15
     results = []
 
@@ -425,8 +369,6 @@ Number of Analysts: {_fmt_number(r.get('numberAnalystsEstimatedRevenue'))}"""
     return results
 
 
-# ── Public API ────────────────────────────────────────────────────────
-
 def format_fmp_data(ticker: str, raw_dir: Path) -> list[dict]:
     fmp_dir = raw_dir / "fmp"
     if not fmp_dir.exists():
@@ -435,14 +377,22 @@ def format_fmp_data(ticker: str, raw_dir: Path) -> list[dict]:
 
     all_docs = []
 
-    # Map filename → formatter
+    company_name = ticker
+    profile_path = fmp_dir / "profile.json"
+    if profile_path.exists():
+        try:
+            with open(profile_path) as pf:
+                pd = json.load(pf)
+                company_name = (pd[0] if isinstance(pd, list) else pd).get("companyName", ticker)
+        except Exception:
+            pass
+
     formatters = {
         "profile.json": lambda d: _format_profile(d, ticker),
         "income_statement_annual.json": lambda d: _format_income_statement(d, ticker, "annual"),
         "balance_sheet_annual.json": lambda d: _format_balance_sheet(d, ticker, "annual"),
         "cash_flow_annual.json": lambda d: _format_cash_flow(d, ticker, "annual"),
         "key_metrics.json": lambda d: _format_key_metrics(d, ticker),
-        "ratios.json": lambda d: _format_ratios(d, ticker),
         "grades.json": lambda d: _format_grades(d, ticker),
         "analyst_estimates.json": lambda d: _format_analyst_estimates(d, ticker),
     }
@@ -456,21 +406,11 @@ def format_fmp_data(ticker: str, raw_dir: Path) -> list[dict]:
             with open(filepath, "r", encoding="utf-8") as f:
                 data = json.load(f)
             docs = formatter(data)
-            # Inject file_path and company_name into all docs
             rel_path = str(filepath.relative_to(PROJECT_ROOT))
             for doc in docs:
                 doc["metadata"]["file_path"] = rel_path
                 if "company_name" not in doc["metadata"]:
-                    # Try to get from profile
-                    profile_path = fmp_dir / "profile.json"
-                    if profile_path.exists():
-                        with open(profile_path) as pf:
-                            profile_data = json.load(pf)
-                            name = (profile_data[0] if isinstance(profile_data, list)
-                                    else profile_data).get("companyName", ticker)
-                            doc["metadata"]["company_name"] = name
-                    else:
-                        doc["metadata"]["company_name"] = ticker
+                    doc["metadata"]["company_name"] = company_name
             all_docs.extend(docs)
         except Exception as e:
             logger.warning(f"Failed to format {filename} for {ticker}: {e}")

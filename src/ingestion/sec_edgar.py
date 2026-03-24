@@ -20,7 +20,6 @@ from src.config import (
 
 logger = logging.getLogger(__name__)
 
-#  Helpers 
 
 _session = requests.Session()
 _session.headers.update({
@@ -43,7 +42,6 @@ def _rate_limited_get(url: str, **kwargs) -> requests.Response:
     return resp
 
 
-#  Ticker → CIK 
 
 _cik_cache: dict[str, str] = {}
 
@@ -66,12 +64,10 @@ def _load_cik_mapping() -> dict[str, str]:
 
 
 def ticker_to_cik(ticker: str) -> str | None:
-    """Return zero-padded CIK for a ticker, or None if not found."""
     mapping = _load_cik_mapping()
     return mapping.get(ticker.upper())
 
 
-#  Filings metadata 
 
 def _get_filings_metadata(cik: str) -> dict:
     url = f"{SEC_BASE_URL}/submissions/CIK{cik}.json"
@@ -112,7 +108,6 @@ def _filter_filings(
     return results
 
 
-#  Filing text extraction 
 
 def _fetch_filing_text(cik: str, filing: dict) -> str:
     accession_no_dashes = filing["accessionNumber"].replace("-", "")
@@ -128,14 +123,12 @@ def _fetch_filing_text(cik: str, filing: dict) -> str:
     content_type = resp.headers.get("Content-Type", "")
     if "html" in content_type or primary_doc.endswith((".htm", ".html")):
         soup = BeautifulSoup(resp.text, "lxml")
-        # Remove script and style elements
         for tag in soup(["script", "style"]):
             tag.decompose()
         text = soup.get_text(separator="\n")
     else:
         text = resp.text
 
-    # Normalize whitespace: collapse blank lines, strip trailing spaces
     lines = [line.strip() for line in text.splitlines()]
     cleaned = []
     prev_blank = False
@@ -151,7 +144,6 @@ def _fetch_filing_text(cik: str, filing: dict) -> str:
     return "\n".join(cleaned)
 
 
-#  Public API 
 
 def fetch_sec_filings(
     ticker: str,
@@ -166,14 +158,12 @@ def fetch_sec_filings(
     ticker = ticker.upper()
     result = {"company_name": "", "cik": "", "filings": [], "errors": []}
 
-    # Resolve CIK
     cik = ticker_to_cik(ticker)
     if not cik:
         result["errors"].append(f"Ticker '{ticker}' not found in EDGAR")
         return result
     result["cik"] = cik
 
-    # Get filings metadata
     try:
         metadata = _get_filings_metadata(cik)
     except requests.RequestException as e:
@@ -182,7 +172,6 @@ def fetch_sec_filings(
 
     result["company_name"] = metadata.get("name", "")
 
-    # Filter to desired form types and date range
     filings = _filter_filings(metadata, form_types, years_back)
     if not filings:
         result["errors"].append(
@@ -193,14 +182,12 @@ def fetch_sec_filings(
     logger.info(f"Found {len(filings)} filings for {ticker}: "
                 f"{[f'{f['form']} ({f['filingDate']})' for f in filings]}")
 
-    # Fetch and store each filing
     save_dir = RAW_DATA_DIR / ticker / "sec"
     save_dir.mkdir(parents=True, exist_ok=True)
 
     for filing in filings:
         try:
             text = _fetch_filing_text(cik, filing)
-            # Save with descriptive filename
             filename = f"{filing['filingDate']}_{filing['form']}.txt"
             filepath = save_dir / filename
             filepath.write_text(text, encoding="utf-8")
@@ -222,7 +209,7 @@ def fetch_sec_filings(
             logger.warning(msg)
             result["errors"].append(msg)
 
-    # Save filing metadata for processing pipeline (EDGAR URLs for citations)
+    # Save EDGAR URLs for citation linking
     if result["filings"]:
         filings_meta = {}
         for f in result["filings"]:

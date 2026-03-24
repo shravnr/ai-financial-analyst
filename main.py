@@ -2,6 +2,7 @@ import json
 import logging
 import random
 import time
+from datetime import date
 
 from openai import OpenAI
 from rich.console import Console
@@ -15,7 +16,6 @@ from src.rag.chain import ask
 
 console = Console()
 
-# ── Logging setup ─────────────────────────────────────────────────────
 
 logging.basicConfig(
     level=logging.ERROR,
@@ -23,7 +23,6 @@ logging.basicConfig(
 )
 
 
-# ── Unified input router ─────────────────────────────────────────────
 
 _THINKING_MESSAGES = [
     "Let me look into that...",
@@ -34,22 +33,36 @@ _THINKING_MESSAGES = [
 ]
 
 _ROUTER_PROMPT = """\
-You are a friendly financial analyst chatbot. Classify the user's message and respond as JSON.
+You are a professional, straightforward financial analyst. No fluff — direct and concise. Classify the user's message and respond as JSON.
 
 If they're asking about a specific company's financials, stock, or business:
-  {"type": "financial", "ticker": "AAPL", "company": "Apple"}
+  {{"type": "financial", "ticker": "AAPL", "company": "Apple", "in_scope": true}}
 
 If they mention a company you can't resolve to a US ticker:
-  {"type": "financial", "ticker": null, "company": "Acme Corp"}
+  {{"type": "financial", "ticker": null, "company": "Acme Corp", "in_scope": false}}
 
 If they're asking a financial question but don't mention which company:
-  {"type": "financial", "ticker": null, "company": null}
+  {{"type": "financial", "ticker": null, "company": null, "in_scope": true}}
 
 If they're saying goodbye or ending the conversation:
-  {"type": "farewell", "response": "a warm goodbye, 1 sentence"}
+  {{"type": "farewell", "response": "a warm goodbye, 1 sentence"}}
 
 If they're making casual conversation (greeting, thanks, chitchat, anything else):
-  {"type": "chat", "response": "a warm, natural reply (1-2 sentences) that gently steers toward asking about a company"}
+  {{"type": "chat", "response": "a brief, professional reply (1 sentence) that steers toward asking about a company"}}
+
+## DATA BOUNDARIES (for in_scope check)
+The system has ONLY:
+- ~2 most recent fiscal years of financial data and SEC filings (10-K, 10-Q, 8-K)
+- ~30 days of news articles
+- Today's date: {current_date}
+
+Set "in_scope": false with a "boundary_message" if the question asks for ANY data beyond the ~2 year window. The boundary_message should be a direct, professional 1-2 sentence response: state what data you DO have, and offer to answer within that scope. No fluff.
+
+Examples:
+- "revenue in 2015" → false
+- "past 3 years", "5-year trend", "since 2010" → false
+- "last 2 years", "recent earnings", "latest quarter" → true
+- General questions ("what are the risks?", "revenue breakdown") → true
 
 Only return US-listed tickers."""
 
@@ -58,15 +71,16 @@ _llm_client = OpenAI(api_key=OPENAI_API_KEY)
 
 def _route_input(user_message: str) -> dict:
     try:
+        prompt = _ROUTER_PROMPT.format(current_date=date.today().isoformat())
         resp = _llm_client.chat.completions.create(
             model=LLM_MODEL_MINI,
             messages=[
-                {"role": "system", "content": _ROUTER_PROMPT},
+                {"role": "system", "content": prompt},
                 {"role": "user", "content": user_message},
             ],
             response_format={"type": "json_object"},
             temperature=0.7,
-            max_tokens=150,
+            max_completion_tokens=150,
         )
         return json.loads(resp.choices[0].message.content)
     except Exception:
@@ -77,7 +91,6 @@ def _route_input(user_message: str) -> dict:
         }
 
 
-# ── Display helpers ───────────────────────────────────────────────────
 
 def _show_greeting():
     console.print()
@@ -94,24 +107,16 @@ def _show_greeting():
 def _show_answer(result: dict):
     answer = result["answer"]
 
-    # Split answer body from citations block for separate styling
     separator = "\n---\n### Citations\n"
     if separator in answer:
         body, citations = answer.split(separator, 1)
         console.print(Markdown(body))
         console.print()
-        console.print("[dim]───── Citations ─────[/dim]")
+        console.print("[dim]Citations:[/dim]")
         for line in citations.strip().splitlines():
             console.print(f"  [dim]{line}[/dim]")
     else:
         console.print(Markdown(answer))
-
-    # Guardrail warnings inline
-    validation = result.get("validation", {})
-    warnings = validation.get("warnings", [])
-    if warnings:
-        for w in warnings:
-            console.print(f"  [yellow]heads up: {w}[/yellow]")
 
     console.print()
 
@@ -143,7 +148,6 @@ def _load_company(ticker: str) -> bool:
             f"[dim]({elapsed:.1f}s)[/dim]"
         )
 
-    # Process into vector store
     console.print(f"  [cyan]Indexing {ticker}...[/cyan]")
     start = time.time()
     stats = process_company(ticker)
@@ -162,7 +166,6 @@ def _load_company(ticker: str) -> bool:
     return True
 
 
-# ── Main ─────────────────────────────────────────────────────────────
 
 def main():
     _show_greeting()
@@ -179,7 +182,6 @@ def main():
                 console.print(f"\n[bold green]analyst >[/bold green] See you later! Happy investing.")
                 break
 
-            # ── Route the input: one LLM call decides everything ─────
             route = _route_input(user_input)
             intent = route.get("type", "chat")
 
@@ -195,16 +197,15 @@ def main():
             # intent == "financial"
             ticker = (route.get("ticker") or "").upper().strip()
 
-            # No ticker from router — distinguish unknown company vs follow-up
             if not ticker:
                 company = route.get("company")
                 if company:
-                    # Router found a company name but couldn't resolve a US ticker
                     console.print(
                         f"\n[bold green]analyst >[/bold green] "
                         f"I don't have data for {company} — I can only look up "
                         f"US-listed public companies. Try a company like Apple or Tesla."
                     )
+                    console.print()
                     continue
                 elif current_ticker:
                     ticker = current_ticker
@@ -214,9 +215,9 @@ def main():
                         "I'd love to dig into that, but which company? "
                         "Mention a name like Apple or Tesla."
                     )
+                    console.print()
                     continue
 
-            # Load company if new
             if ticker != current_ticker:
                 if not is_ticker_indexed(ticker):
                     console.print(
@@ -227,11 +228,22 @@ def main():
                         current_ticker = ticker
                     else:
                         console.print(f"\n  [red]Hmm, I couldn't load {ticker}. Try a different ticker?[/red]")
+                        console.print()
                         continue
                 else:
                     current_ticker = ticker
 
-            # Ask the financial question
+            # Skip main LLM call if question is out of data scope
+            if not route.get("in_scope", True):
+                msg = route.get(
+                    "boundary_message",
+                    f"I only have ~2 years of financial data and SEC filings for {current_ticker}, "
+                    f"plus ~30 days of news. Try asking about recent financials instead."
+                )
+                console.print(f"\n[bold green]analyst >[/bold green] {msg}")
+                console.print()
+                continue
+
             console.print(f"\n[bold green]analyst >[/bold green] [dim]{random.choice(_THINKING_MESSAGES)}[/dim]")
             result = ask(user_input, current_ticker)
             _show_answer(result)

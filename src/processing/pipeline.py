@@ -29,7 +29,6 @@ def _process_sec_filings(ticker: str, company_name: str, raw_dir: Path) -> list[
         logger.warning(f"No SEC data directory for {ticker}")
         return []
 
-    # Load EDGAR filing metadata (URLs for citations)
     filings_meta = {}
     meta_path = sec_dir / "filings_meta.json"
     if meta_path.exists():
@@ -38,7 +37,6 @@ def _process_sec_filings(ticker: str, company_name: str, raw_dir: Path) -> list[
 
     all_chunks = []
     for filepath in sorted(sec_dir.glob("*.txt")):
-        # Parse filename: YYYY-MM-DD_FORM-TYPE.txt
         stem = filepath.stem  # e.g., "2025-10-31_10-K"
         parts = stem.split("_", 1)
         if len(parts) == 2:
@@ -99,14 +97,12 @@ def process_company(ticker: str, reprocess: bool = False) -> dict:
         deleted = delete_company(ticker)
         logger.info(f"Deleted {deleted} existing documents for {ticker}")
 
-    # Process each source
     sec_chunks = _process_sec_filings(ticker, company_name, raw_dir)
     fmp_chunks = format_fmp_data(ticker, raw_dir)
     news_chunks = _process_news(ticker, company_name, raw_dir)
 
     all_chunks = sec_chunks + fmp_chunks + news_chunks
 
-    # Embed and store
     if all_chunks:
         added = add_documents(all_chunks)
     else:

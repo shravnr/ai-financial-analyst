@@ -15,7 +15,7 @@ _client = OpenAI(api_key=OPENAI_API_KEY)
 
 MAX_TOOL_ITERATIONS = 3
 
-#  Tool definitions for OpenAI function calling ─
+# Tool definitions for function calling
 
 TOOLS = [
     {
@@ -86,42 +86,51 @@ TOOLS = [
     },
 ]
 
-# Source type mapping for each tool
 _TOOL_SOURCE_MAP = {
     "search_sec_filings": ["sec"],
     "search_financial_data": ["fmp"],
     "search_news": ["news"],
 }
 
-SYSTEM_PROMPT = """You are a sharp, confident financial analyst. Answer questions using data retrieved through your tools. Be direct and analytical — like a real analyst would be.
-
-## WORKFLOW
-
-1. Figure out what data you need.
-2. Call the right tool(s). Use multiple tools if the question spans different data types.
-3. Analyze the data and give a clear, direct answer.
+SYSTEM_PROMPT = """You are a professional, straightforward financial analyst. Direct, specific, and concise.
 
 ## RULES
 
-1. **Base your answer on tool results.** You may compute derived metrics from the data (margins, growth rates, ratios) — that's what analysts do. Do not recall specific numbers from your training data.
+1. Call tools to retrieve relevant data. Use multiple tools when the question spans different data types (financials, SEC filings, news).
+2. Answer using ONLY the data your tools returned. Every claim — numbers, facts, events, qualitative statements — must have an inline [N] citation matching the exact source it came from.
+3. Derived metrics (margins, growth rates, ratios, differences) computed from returned data are encouraged — that is analysis, not fabrication.
+4. If tools return data relevant to the question, USE it to build the best answer you can — even if the match isn't exact. For example, an earnings summary can be built from 8-K filings and income statement data.
+5. Never fabricate data or cite a source for data it does not contain. If the tools returned nothing useful, say so in one sentence.
 
-2. **Cite inline.** Place [N] right after the claim, where N is the exact Source number from the retrieved context. If data comes from [Source 3], cite as [3].
+## CITATIONS
 
-   Example: Revenue was $394.3B[1], driven by strong Services growth[4].
+Place [N] inline immediately after each claim. N = the Source number shown in tool results (e.g., [Source 3] → cite as [3]).
 
-   Do NOT renumber. Use the exact source reference numbers. Do NOT write a footnotes block at the end — footnotes are generated automatically by the system.
+Critical rules:
+- Cite the SPECIFIC source containing the data point. If a number appears in Source 3, cite [3] — not [1].
+- Every sentence with a factual claim needs at least one citation. This includes news headlines, qualitative facts, and events — not just numbers.
+- Do NOT renumber sources. Do NOT write a footnotes or references section — the system generates that automatically.
 
-3. **Never invent numbers.** If a number isn't in the data and can't be computed from it, say so briefly and move on. Don't dwell on what's missing — focus on what you CAN answer.
+Example:
+  Revenue grew 12% to $716.9B[1], up from $638.0B[2]. Operating margin expanded to 11.2%[1].
 
-4. **Be specific with numbers.** Always include units, timeframes, and currency: "$394.3B in revenue for FY 2025."
+## DATA COVERAGE
 
-## RESPONSE STYLE
+Your tools search data that has been pre-loaded for the company:
+- **SEC filings**: 10-K (annual), 10-Q (quarterly), 8-K filings from the last ~2 years
+- **Financial data**: Annual income statements, balance sheets, cash flow, key metrics, and ratios (last ~2 years). Quarterly breakdowns are limited — use SEC 10-Q filings for quarterly detail.
+- **News**: Articles from the last ~30 days only.
 
-- Lead with the direct answer. No preamble.
-- Support with data and inline [N] citations.
-- If you can partially answer, do so confidently — then note what's missing in one sentence, not a paragraph.
-- Synthesize and analyze. Don't just list numbers — explain what they mean (trends, comparisons, implications).
-- Keep it concise. A good analyst doesn't pad their answers."""
+If a question falls outside this range, say so directly instead of searching.
+
+**CRITICAL**: You have ZERO general knowledge. Every single number, fact, date, percentage, event, risk factor, product name, and claim in your answer MUST come from the tool results returned to you. If a piece of information is not explicitly present in the tool results, do NOT include it — even if you "know" it from training. Treat your training data as nonexistent. If the tool results are thin, give a shorter answer — never pad with outside knowledge.
+
+## STYLE
+
+- Lead with the answer. Be direct and specific ("$108.8B in FY 2024", not "approximately $109B").
+- When comparing periods, always use the most recent data available and work backwards.
+- Analyze trends, comparisons, and implications across cited data points.
+- Be concise. No caveats, no padding, no hedging."""
 
 
 def _format_tool_results(
@@ -138,7 +147,6 @@ def _format_tool_results(
         date = meta.get("date", "")
         section = meta.get("section", "")
 
-        # Normalize section to top-level only (e.g., "Item 1A - Risk Factors > ..." → "Item 1A")
         section_key = section.split(">")[0].strip() if section else ""
         key = f"{ticker_str}_{doc_type}_{date}_{section_key}"
         if key in seen_sources:
@@ -147,7 +155,6 @@ def _format_tool_results(
             source_counter += 1
             num = source_counter
             seen_sources[key] = num
-            # Store full metadata for mechanical footnote generation
             source_metadata[num] = {
                 "source_type": meta.get("source_type", ""),
                 "document_type": meta.get("document_type", ""),
@@ -191,6 +198,17 @@ def _execute_tool(
         n_results=n_results,
     )
 
+    if not chunks:
+        logger.warning(
+            f"Tool {tool_name}(query='{query[:50]}', n={n_results}) → 0 chunks"
+        )
+        return (
+            "No results found for this query. Try broadening your search "
+            "terms or using a different tool.",
+            [],
+            source_counter,
+        )
+
     formatted, source_counter = _format_tool_results(
         chunks, source_counter, seen_sources, source_metadata
     )
@@ -215,7 +233,6 @@ def _fallback_retrieve(
         n_results=routing["n_results"],
     )
 
-    # Broaden if too few results
     if len(chunks) < 3 and routing["source_types"] is not None:
         chunks = vector_query(
             query_text=question,
@@ -231,13 +248,10 @@ def _fallback_retrieve(
     return formatted, chunks, source_metadata
 
 
-# ── Citation post-processing ─────────────────────────────────────────
-
+# Strip LLM-generated footnotes, rebuild from actual chunk metadata
 def _strip_footnotes(answer: str) -> str:
-    """Remove any LLM-generated footnotes block from end of answer."""
     lines = answer.rstrip().split("\n")
 
-    # Walk backwards to find where footnotes start
     cut = len(lines)
     for i in range(len(lines) - 1, -1, -1):
         s = lines[i].strip()
@@ -249,7 +263,6 @@ def _strip_footnotes(answer: str) -> str:
             break
 
     body = "\n".join(lines[:cut]).rstrip()
-    # Remove trailing --- separator if present
     if body.endswith("---"):
         body = body[:-3].rstrip()
 
@@ -257,40 +270,33 @@ def _strip_footnotes(answer: str) -> str:
 
 
 def _format_footnote(num: int, meta: dict) -> str:
-    """Build a single citation footnote with verifiable source reference."""
     source_type = meta.get("source_type", "").upper()
     ticker = meta.get("ticker", "")
     doc_type = meta.get("document_type", "").replace("_", " ").title()
     date = meta.get("date", "")
     section = meta.get("section", "")
-    file_path = meta.get("file_path", "")
     edgar_url = meta.get("edgar_url", "")
     url = meta.get("url", "")
 
-    # Build description
     desc = f"{source_type} — {ticker} {doc_type}"
     if date:
         desc += f" ({date})"
     if section:
         desc += f", {section}"
 
-    # Add verifiable reference (only public URLs — skip local file paths)
     ref = edgar_url or url
     if ref:
         desc += f" → {ref}"
 
-    return f"- \\[{num}\\] {desc}"
+    return f"- [{num}] {desc}"
 
 
 def _postprocess_citations(answer: str, source_metadata: dict) -> str:
-    """Strip LLM footnotes, renumber citations, rebuild with accurate metadata."""
     if not source_metadata:
         return answer
 
-    # 1. Strip any model-generated footnotes
     body = _strip_footnotes(answer)
 
-    # 2. Find all [N] in body, ordered by first appearance
     refs_in_order = []
     seen = set()
     for m in re.finditer(r"\[(\d+)\]", body):
@@ -302,17 +308,14 @@ def _postprocess_citations(answer: str, source_metadata: dict) -> str:
     if not refs_in_order:
         return answer  # No citations to process
 
-    # 3. Filter to citations that exist in our metadata
     valid_refs = [n for n in refs_in_order if n in source_metadata]
 
     if not valid_refs:
-        # Model likely renumbered and nothing matches — return original
         return answer
 
-    # 4. Build renumbering map: old source num → new sequential num
+    # Renumber sequentially by first appearance
     remap = {old: new for new, old in enumerate(valid_refs, 1)}
 
-    # 5. Renumber in body text
     def _replace_ref(m):
         old = int(m.group(1))
         if old in remap:
@@ -321,7 +324,7 @@ def _postprocess_citations(answer: str, source_metadata: dict) -> str:
 
     new_body = re.sub(r"\[(\d+)\]", _replace_ref, body)
 
-    # 6. Build accurate footnotes from chunk metadata
+    # Rebuild footnotes from actual chunk metadata
     footnotes = []
     for old_num in valid_refs:
         new_num = remap[old_num]
@@ -332,7 +335,6 @@ def _postprocess_citations(answer: str, source_metadata: dict) -> str:
     return new_body.rstrip() + "\n\n" + citations_block
 
 
-# ── Main entry point ─────────────────────────────────────────────────
 
 def ask(
     question: str,
@@ -355,7 +357,7 @@ def ask(
     ]
 
     try:
-        #  Agentic tool-calling loop
+        # Agentic loop — LLM picks tools, max 3 iterations
         for iteration in range(MAX_TOOL_ITERATIONS):
             response = _client.chat.completions.create(
                 model=LLM_MODEL,
@@ -363,7 +365,7 @@ def ask(
                 tools=TOOLS,
                 tool_choice="auto",
                 temperature=0.1,
-                max_tokens=2000,
+                max_completion_tokens=2000,
             )
 
             msg = response.choices[0].message
@@ -371,7 +373,6 @@ def ask(
             total_prompt_tokens += usage.prompt_tokens
             total_completion_tokens += usage.completion_tokens
 
-            # If the model wants to call tools
             if msg.tool_calls:
                 messages.append(msg)
 
@@ -396,16 +397,31 @@ def ask(
                         "content": result_str,
                     })
             else:
-                # Model is done — has the final answer
                 answer = msg.content
                 break
         else:
-            # Exhausted iterations — take the last response
-            answer = msg.content or "I was unable to gather sufficient data to answer this question."
+            if msg.content:
+                answer = msg.content
+            else:
+                tried = set(tools_called)
+                source_names = []
+                if "search_sec_filings" in tried:
+                    source_names.append("SEC filings")
+                if "search_financial_data" in tried:
+                    source_names.append("financial data")
+                if "search_news" in tried:
+                    source_names.append("news")
+                sources_str = ", ".join(source_names) if source_names else "available sources"
+                answer = (
+                    f"I searched {sources_str} for {ticker} but couldn't find "
+                    f"data that directly answers this question. Try rephrasing "
+                    f"— for example, asking about a specific metric, time "
+                    f"period, or filing."
+                )
 
     except Exception as e:
         logger.error(f"Tool calling failed ({e}), falling back to static retrieval")
-        # Graceful fallback to static pipeline
+        # Fallback to static retrieval if tool-calling fails
         context_str, all_chunks, source_metadata = _fallback_retrieve(question, ticker)
         all_context_parts = [context_str]
         tools_called = ["fallback_static"]
@@ -421,17 +437,15 @@ def ask(
                 )},
             ],
             temperature=0.1,
-            max_tokens=2000,
+            max_completion_tokens=2000,
         )
         answer = fallback_response.choices[0].message.content
         fu = fallback_response.usage
         total_prompt_tokens += fu.prompt_tokens
         total_completion_tokens += fu.completion_tokens
 
-    #  Post-process citations: replace LLM footnotes with accurate ones
     answer = _postprocess_citations(answer, source_metadata)
 
-    #  Build source list
     full_context = "\n\n---\n\n".join(all_context_parts)
     sources = []
     seen = set()
@@ -451,8 +465,9 @@ def ask(
                 "url": meta.get("url", ""),
             })
 
-    #  Run guardrails (rule-based only; LLM grounding runs in eval) ─
-    validation = validate_response(answer, full_context, len(all_chunks), use_llm_grounding=False)
+    # Guardrails: citation check, number verification, LLM grounding
+    validation = validate_response(answer, full_context, len(all_chunks))
+
     if validation["warnings"]:
         logger.warning(f"Guardrail warnings: {validation['warnings']}")
 

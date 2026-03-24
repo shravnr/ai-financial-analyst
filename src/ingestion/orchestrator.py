@@ -22,24 +22,21 @@ def ingest_company(ticker: str) -> dict:
         "summary": {},
     }
 
-    #  1. FMP (run first to get company name for NewsAPI) 
+    # FMP first — need company name for news search
     logger.info(f"[{ticker}] Fetching FMP data...")
     fmp_result = fetch_fmp_data(ticker)
     result["fmp"] = fmp_result
     company_name = fmp_result.get("company_name", "")
     result["company_name"] = company_name
 
-    #  2. SEC EDGAR 
     logger.info(f"[{ticker}] Fetching SEC EDGAR filings...")
     sec_result = fetch_sec_filings(ticker)
     result["sec"] = sec_result
 
-    # Use SEC name if FMP didn't provide one
     if not company_name and sec_result.get("company_name"):
         company_name = sec_result["company_name"]
         result["company_name"] = company_name
 
-    #  3. News 
     if company_name:
         logger.info(f"[{ticker}] Fetching news for '{company_name}'...")
         news_result = fetch_news(company_name, ticker)
@@ -48,7 +45,6 @@ def ingest_company(ticker: str) -> dict:
         news_result = fetch_news(ticker, ticker)
     result["news"] = news_result
 
-    #  Build summary 
     sec_filings = sec_result.get("filings", [])
     fmp_files = fmp_result.get("files", {})
 

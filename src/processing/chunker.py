@@ -5,9 +5,7 @@ from langchain_text_splitters import RecursiveCharacterTextSplitter
 
 logger = logging.getLogger(__name__)
 
-# ── 10-K section detection ────────────────────────────────────────────
-
-# Standard 10-K Item patterns — ordered by appearance in filings
+# 10-K section patterns — ordered by appearance in filings
 _10K_SECTIONS = [
     (r"(?i)\bItem\s+1A[\.\s\-\—]+Risk\s+Factors", "Item 1A - Risk Factors"),
     (r"(?i)\bItem\s+1B", "Item 1B - Unresolved Staff Comments"),
@@ -31,7 +29,6 @@ _10K_SECTIONS = [
 
 
 def _detect_section(text: str, position: int, full_text: str) -> str:
-    # Look at text before this chunk's position
     preceding = full_text[:position]
 
     best_section = "Preamble"
@@ -45,8 +42,6 @@ def _detect_section(text: str, position: int, full_text: str) -> str:
 
     return best_section
 
-
-# ── Chunking ──────────────────────────────────────────────────────────
 
 _splitter = RecursiveCharacterTextSplitter(
     chunk_size=3000,
@@ -62,7 +57,7 @@ def chunk_sec_filing(
 ) -> list[dict]:
     is_10k = metadata.get("document_type") == "10-K"
 
-    # For small documents (8-K), don't split
+    # Small docs (8-K <4KB) stay whole
     if len(text) < 4000:
         section = "Earnings Press Release" if metadata.get("document_type") == "8-K" else "Full Document"
         return [{
@@ -72,11 +67,9 @@ def chunk_sec_filing(
 
     chunks = _splitter.split_text(text)
 
-    # Track character positions for section detection
     results = []
     search_start = 0
     for i, chunk_text in enumerate(chunks):
-        # Find where this chunk starts in the original text
         pos = text.find(chunk_text[:100], search_start)
         if pos == -1:
             pos = search_start
@@ -101,7 +94,6 @@ def chunk_sec_filing(
 def chunk_news_articles(articles: list[dict], ticker: str, company_name: str) -> list[dict]:
     results = []
     for i, article in enumerate(articles):
-        # Build text from available fields
         parts = []
         title = article.get("title", "")
         if title:
@@ -111,7 +103,7 @@ def chunk_news_articles(articles: list[dict], ticker: str, company_name: str) ->
             parts.append(desc)
         content = article.get("content", "")
         if content:
-            # NewsAPI free tier truncates content with "[+N chars]" suffix
+            # Strip NewsAPI truncation suffix
             content = re.sub(r"\[\+\d+ chars\]$", "", content).strip()
             if content:
                 parts.append(content)

@@ -1,8 +1,4 @@
-# ── Deep eval ────────────────────────────────────────────────────────
-# All questions use {company} placeholder — resolved at eval time.
-
-# Consistency pairs — same question asked two ways.
-# Format: {"name", "questions": [q_a, q_b], "expected_sources"}
+# All questions use {company}/{ticker} placeholders — resolved at eval time
 CONSISTENCY_PAIRS: list[dict] = [
     {
         "name": "Revenue",
@@ -38,9 +34,6 @@ CONSISTENCY_PAIRS: list[dict] = [
     },
 ]
 
-# Grounding questions — 10 curated questions covering SEC, FMP, News.
-# No ground truth — grounding judge evaluates answer vs retrieved context (correct for live data).
-# Format: (capability, question_template, expected_sources)
 GROUNDING_QUESTIONS: list[tuple[str, str, list[str]]] = [
     (
         "Revenue trends",
@@ -95,10 +88,6 @@ GROUNDING_QUESTIONS: list[tuple[str, str, list[str]]] = [
 ]
 
 
-# ── Smoke test ───────────────────────────────────────────────────────
-
-# Normal questions — 3 per indexed ticker, rule-based only.
-# Format: (capability, question_template, expected_sources)
 SMOKE_QUESTIONS: list[tuple[str, str, list[str]]] = [
     (
         "Revenue",
@@ -117,10 +106,12 @@ SMOKE_QUESTIONS: list[tuple[str, str, list[str]]] = [
     ),
 ]
 
-# Boundary refusals — must refuse without hallucinating a number.
-# Format: (name, question)
+# Boundary refusals — must refuse without hallucinating
 BOUNDARY_REFUSALS: list[tuple[str, str]] = [
     ("Private company", "What is Stripe's revenue?"),
     ("Unknown company", "What is Cred's financial performance?"),
     ("Speculative", "What will Apple's stock price be next month?"),
+    ("Old data", "What was Apple's revenue in 2015?"),
+    ("Long trend", "Show me Amazon's 5-year revenue trend."),
+    ("Out of window", "Compare Tesla's 2018 and 2019 earnings."),
 ]

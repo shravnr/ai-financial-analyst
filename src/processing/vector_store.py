@@ -10,10 +10,7 @@ from src.config import CHROMA_DIR, OPENAI_API_KEY, EMBEDDING_MODEL
 
 logger = logging.getLogger(__name__)
 
-# ChromaDB max batch size
 _BATCH_SIZE = 100
-
-#  Singleton client
 
 _client: Optional[chromadb.PersistentClient] = None
 _collection = None
@@ -55,25 +52,20 @@ def _make_doc_id(metadata: dict, chunk_index: int) -> str:
     return "_".join(parts).replace(" ", "_").replace("/", "_")
 
 
-# ── BM25 keyword search ──────────────────────────────────────────────
-
 _bm25_cache: dict[str, tuple] = {}  # ticker → (bm25_index, docs_list)
 
 
 def _tokenize(text: str) -> list[str]:
-    """Simple whitespace + punctuation tokenizer for BM25."""
     return re.findall(r"\w+", text.lower())
 
 
 def _get_bm25_index(ticker: str) -> tuple[Optional[BM25Okapi], list[dict]]:
-    """Build or retrieve cached BM25 index for a ticker."""
     ticker = ticker.upper()
     if ticker in _bm25_cache:
         return _bm25_cache[ticker]
 
     collection = _get_collection()
 
-    # Fetch all documents for this ticker
     all_docs = collection.get(
         where={"ticker": ticker},
         include=["documents", "metadatas"],
@@ -82,7 +74,6 @@ def _get_bm25_index(ticker: str) -> tuple[Optional[BM25Okapi], list[dict]]:
     if not all_docs["ids"]:
         return None, []
 
-    # Tokenize and build BM25 index
     tokenized = [_tokenize(doc) for doc in all_docs["documents"]]
     bm25 = BM25Okapi(tokenized)
 
@@ -104,7 +95,7 @@ def _bm25_search(
     source_types: list[str] | None,
     n_results: int,
 ) -> list[dict]:
-    """Run BM25 keyword search over a ticker's documents."""
+    # BM25 keyword search, filtered by source type
     bm25, docs_list = _get_bm25_index(ticker)
     if bm25 is None:
         return []
@@ -115,7 +106,6 @@ def _bm25_search(
 
     scores = bm25.get_scores(query_tokens)
 
-    # Filter by source types and rank
     scored = []
     for i, doc in enumerate(docs_list):
         if source_types and doc["metadata"].get("source_type") not in source_types:
@@ -131,7 +121,6 @@ def _bm25_search(
 
 
 def _doc_key(doc: dict) -> str:
-    """Stable dedup key for a document."""
     m = doc["metadata"]
     return (
         f"{m.get('ticker', '')}_{m.get('source_type', '')}_"
@@ -145,7 +134,7 @@ def _rrf_merge(
     n_results: int,
     k: int = 60,
 ) -> list[dict]:
-    """Reciprocal Rank Fusion: merge two ranked lists into one."""
+    # Reciprocal Rank Fusion: merge vector + BM25 ranked lists
     scores: dict[str, float] = {}
     doc_map: dict[str, dict] = {}
 
@@ -164,7 +153,6 @@ def _rrf_merge(
     return [doc_map[k] for k in sorted_keys[:n_results]]
 
 
-#  Public API
 
 def add_documents(documents: list[dict]) -> int:
     if not documents:
@@ -180,7 +168,7 @@ def add_documents(documents: list[dict]) -> int:
         text = doc["text"]
         metadata = doc["metadata"]
 
-        # ChromaDB metadata values must be str, int, float, or bool
+        # ChromaDB requires primitive metadata values
         clean_metadata = {}
         for k, v in metadata.items():
             if v is None:
@@ -195,7 +183,6 @@ def add_documents(documents: list[dict]) -> int:
         texts.append(text)
         metadatas.append(clean_metadata)
 
-    # Upsert in batches
     added = 0
     for i in range(0, len(ids), _BATCH_SIZE):
         batch_ids = ids[i:i + _BATCH_SIZE]
@@ -210,7 +197,6 @@ def add_documents(documents: list[dict]) -> int:
         added += len(batch_ids)
         logger.debug(f"Upserted batch of {len(batch_ids)} documents")
 
-    # Invalidate BM25 cache for affected tickers
     tickers = {m.get("ticker", "").upper() for m in metadatas}
     for t in tickers:
         _bm25_cache.pop(t, None)
@@ -231,7 +217,6 @@ def query(
         logger.warning("ChromaDB collection is empty — no documents to search")
         return []
 
-    # Build where filter
     where_filters = []
     if ticker:
         where_filters.append({"ticker": ticker.upper()})
@@ -244,8 +229,7 @@ def query(
     elif len(where_filters) > 1:
         where = {"$and": where_filters}
 
-    # ── Vector search ─────────────────────────────────────────────────
-    # Fetch extra candidates for RRF merging
+    # Vector search — fetch 2x for RRF merging
     vector_k = min(n_results * 2, collection.count())
     vector_results_raw = collection.query(
         query_texts=[query_text],
@@ -262,7 +246,7 @@ def query(
             "distance": vector_results_raw["distances"][0][i],
         })
 
-    # ── BM25 keyword search ──────────────────────────────────────────
+    # BM25 keyword search
     if ticker:
         bm25_results = _bm25_search(
             query_text, ticker, source_types, n_results=n_results * 2
@@ -270,7 +254,7 @@ def query(
     else:
         bm25_results = []  # BM25 index is per-ticker; skip if no ticker
 
-    # ── Merge with Reciprocal Rank Fusion ─────────────────────────────
+    # Merge with Reciprocal Rank Fusion
     if bm25_results:
         merged = _rrf_merge(vector_results, bm25_results, n_results)
         logger.info(
@@ -279,7 +263,6 @@ def query(
         )
         return merged
 
-    # No BM25 results (no ticker or empty index) — return vector only
     return vector_results[:n_results]
 
 
@@ -297,7 +280,6 @@ def delete_company(ticker: str) -> int:
     collection = _get_collection()
     ticker = ticker.upper()
 
-    # Get all IDs for this ticker
     existing = collection.get(where={"ticker": ticker}, include=[])
     if existing["ids"]:
         collection.delete(ids=existing["ids"])

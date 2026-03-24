@@ -20,7 +20,7 @@ def fetch_news(
         result["errors"].append("NEWS_API_KEY not set")
         return result
 
-    # Build query: strip common corporate suffixes for cleaner search
+    # Strip corporate suffixes for cleaner NewsAPI search
     query = company_name
     for suffix in [" Inc.", " Inc", " Corp.", " Corp", " Ltd.", " Ltd",
                    " plc", " PLC", " Co.", " Co", " Corporation",
@@ -61,7 +61,6 @@ def fetch_news(
         result["errors"].append(f"No news articles found for '{query}'")
         return result
 
-    # Save raw response
     save_dir = RAW_DATA_DIR / ticker / "news"
     save_dir.mkdir(parents=True, exist_ok=True)
     filepath = save_dir / "articles.json"

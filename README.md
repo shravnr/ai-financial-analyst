@@ -15,6 +15,7 @@ python main.py
 ```
 
 `.env` needs:
+
 - `OPENAI_API_KEY` (platform.openai.com)
 - `FMP_API_KEY` (site.financialmodelingprep.com, free tier)
 - `NEWS_API_KEY` (newsapi.org, free tier)
@@ -24,7 +25,7 @@ Mention a company and it takes care of the rest. First time for a company takes 
 
 ## Stack
 
-- GPT-4o for answers, GPT-4o-mini for routing and validation
+- GPT-5.4-mini for answers, GPT-5.4-nano for routing and validation
 - SEC EDGAR, FMP API, NewsAPI for data
 - ChromaDB + OpenAI embeddings for retrieval
 - LangChain for chunking, OpenAI function calling for tool use
@@ -33,9 +34,9 @@ Mention a company and it takes care of the rest. First time for a company takes 
 
 ```
 Question
-  -> Router identifies company and ticker (gpt-4o-mini)
+  -> Router identifies company and ticker (gpt-5.4-nano)
   -> Auto-ingests if company is new (SEC + FMP + News -> ChromaDB)
-  -> GPT-4o decides which tools to call (up to 3 rounds):
+  -> gpt-5.4-mini decides which tools to call (up to 3 rounds):
        search_sec_filings, search_financial_data, search_news
   -> Guardrails check the answer:
        Rule-based: citations present? numbers traceable to sources?
@@ -47,9 +48,9 @@ It's not a fixed retrieval pipeline. The LLM picks which sources to query based 
 
 ## Design Choices
 
-**Agentic tool calling.** GPT-4o decides what data to fetch rather than always querying everything. Costs more tokens but gives better answers. Capped at 3 iterations.
+**Agentic tool calling.** The LLM decides what data to fetch rather than always querying everything. Costs more tokens but gives better answers. Capped at 3 iterations.
 
-**Model tiering.** GPT-4o where accuracy matters (answers, eval). GPT-4o-mini where it doesn't (routing, validation). Keeps costs down without hurting quality.
+**Model tiering.** gpt-5.4-mini where accuracy matters (answers, eval). gpt-5.4-nano where it doesn't (routing, validation). Keeps costs down without hurting quality.
 
 **Hybrid router.** Regex handles most queries for free. LLM fallback catches the rest.
 
@@ -65,10 +66,10 @@ No external datasets needed. Auto-ingests tickers, questions are templatized so 
 
 Runs a deep eval (14 questions) on one ticker and a smoke test on a different one, then prints a scorecard. Five signals split across two methods:
 
-- LLM-as-judge (GPT-4o): consistency, grounding, boundary refusal
+- LLM-as-judge (gpt-5.4-mini): consistency, grounding, boundary refusal
 - Rule-based: citation/number verification, smoke test
 
-Master score = average of both groups. Scored 9.2 on AAPL and 9.5 on AMZN.
+Master score = average of both groups. Scored 9.5 on AAPL and 9.3 on AMZN.
 
 ## Limitations
 
