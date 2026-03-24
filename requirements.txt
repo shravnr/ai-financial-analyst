@@ -2,8 +2,9 @@
 openai>=1.0.0
 tiktoken
 
-# Vector store
+# Vector store & retrieval
 chromadb>=0.4.0
+rank_bm25>=0.2.2
 
 # LangChain (used in Phase 2-3 for chunking and RAG chain)
 langchain>=0.2.0

@@ -92,7 +92,19 @@ def _show_greeting():
 
 
 def _show_answer(result: dict):
-    console.print(Markdown(result["answer"]))
+    answer = result["answer"]
+
+    # Split answer body from citations block for separate styling
+    separator = "\n---\n### Citations\n"
+    if separator in answer:
+        body, citations = answer.split(separator, 1)
+        console.print(Markdown(body))
+        console.print()
+        console.print("[dim]───── Citations ─────[/dim]")
+        for line in citations.strip().splitlines():
+            console.print(f"  [dim]{line}[/dim]")
+    else:
+        console.print(Markdown(answer))
 
     # Guardrail warnings inline
     validation = result.get("validation", {})

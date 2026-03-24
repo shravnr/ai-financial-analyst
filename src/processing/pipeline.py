@@ -2,7 +2,7 @@ import json
 import logging
 from pathlib import Path
 
-from src.config import RAW_DATA_DIR
+from src.config import RAW_DATA_DIR, PROJECT_ROOT
 from src.processing.chunker import chunk_sec_filing, chunk_news_articles
 from src.processing.structured_formatter import format_fmp_data
 from src.processing.vector_store import add_documents, delete_company
@@ -29,6 +29,13 @@ def _process_sec_filings(ticker: str, company_name: str, raw_dir: Path) -> list[
         logger.warning(f"No SEC data directory for {ticker}")
         return []
 
+    # Load EDGAR filing metadata (URLs for citations)
+    filings_meta = {}
+    meta_path = sec_dir / "filings_meta.json"
+    if meta_path.exists():
+        with open(meta_path) as f:
+            filings_meta = json.load(f)
+
     all_chunks = []
     for filepath in sorted(sec_dir.glob("*.txt")):
         # Parse filename: YYYY-MM-DD_FORM-TYPE.txt
@@ -41,12 +48,16 @@ def _process_sec_filings(ticker: str, company_name: str, raw_dir: Path) -> list[
 
         text = filepath.read_text(encoding="utf-8")
 
+        file_meta = filings_meta.get(filepath.name, {})
+
         metadata = {
             "ticker": ticker,
             "company_name": company_name,
             "source_type": "sec",
             "document_type": form_type,
             "date": date,
+            "file_path": str(filepath.relative_to(PROJECT_ROOT)),
+            "edgar_url": file_meta.get("edgar_url", ""),
         }
 
         chunks = chunk_sec_filing(text, metadata)

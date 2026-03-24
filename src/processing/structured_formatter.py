@@ -2,6 +2,8 @@ import json
 import logging
 from pathlib import Path
 
+from src.config import PROJECT_ROOT
+
 logger = logging.getLogger(__name__)
 
 
@@ -454,8 +456,10 @@ def format_fmp_data(ticker: str, raw_dir: Path) -> list[dict]:
             with open(filepath, "r", encoding="utf-8") as f:
                 data = json.load(f)
             docs = formatter(data)
-            # Inject company_name into all docs
+            # Inject file_path and company_name into all docs
+            rel_path = str(filepath.relative_to(PROJECT_ROOT))
             for doc in docs:
+                doc["metadata"]["file_path"] = rel_path
                 if "company_name" not in doc["metadata"]:
                     # Try to get from profile
                     profile_path = fmp_dir / "profile.json"

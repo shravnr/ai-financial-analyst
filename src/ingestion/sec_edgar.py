@@ -211,6 +211,7 @@ def fetch_sec_filings(
                 "path": str(filepath),
                 "char_count": len(text),
                 "accession_number": filing["accessionNumber"],
+                "primary_document": filing["primaryDocument"],
             })
             logger.info(
                 f"Saved {filing['form']} ({filing['filingDate']}): "
@@ -220,5 +221,20 @@ def fetch_sec_filings(
             msg = f"Failed to fetch {filing['form']} ({filing['filingDate']}): {e}"
             logger.warning(msg)
             result["errors"].append(msg)
+
+    # Save filing metadata for processing pipeline (EDGAR URLs for citations)
+    if result["filings"]:
+        filings_meta = {}
+        for f in result["filings"]:
+            filename = f"{f['date']}_{f['form']}.txt"
+            acc_no_dashes = f["accession_number"].replace("-", "")
+            edgar_url = (
+                f"https://www.sec.gov/Archives/edgar/data/"
+                f"{cik.lstrip('0')}/{acc_no_dashes}/{f['primary_document']}"
+            )
+            filings_meta[filename] = {"edgar_url": edgar_url}
+        meta_path = save_dir / "filings_meta.json"
+        with open(meta_path, "w", encoding="utf-8") as mf:
+            json.dump(filings_meta, mf, indent=2)
 
     return result

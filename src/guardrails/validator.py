@@ -118,6 +118,25 @@ def _check_numbers_in_context(answer: str, context: str) -> list[str]:
                     raw_comma = f"{val:,.0f}"
                     if raw_comma in context:
                         found = True
+
+                # 4. Check if number is derivable from context numbers
+                if not found:
+                    ctx_list = list(context_amounts)
+                    for i, a in enumerate(ctx_list):
+                        for b in ctx_list[i + 1:]:
+                            for derived in (a - b, b - a, a + b):
+                                if derived > 0 and abs(val - derived) / derived < 0.01:
+                                    found = True
+                                    break
+                            if not found and b != 0:
+                                for ratio in (a / b, b / a):
+                                    if ratio > 0 and abs(val - ratio) / ratio < 0.01:
+                                        found = True
+                                        break
+                            if found:
+                                break
+                        if found:
+                            break
             except ValueError:
                 pass
 
