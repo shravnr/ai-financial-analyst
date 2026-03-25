@@ -4,11 +4,12 @@ CLI chatbot that answers questions about US public companies using SEC filings, 
 
 ## Quick Start
 
-1. Clone the repo and `cd ai-financial-analyst-chatbot`
-2. Create a virtualenv: `python3 -m venv .venv && source .venv/bin/activate`
-3. Install dependencies: `pip install -r requirements.txt`
-4. Copy `.env.example` to `.env` and add your API keys
-5. Run: `python main.py`
+1. Ensure Python 3.10+ is installed: `python3 --version`
+2. Clone the repo and `cd ai-financial-analyst-chatbot`
+3. Create a virtualenv: `python3 -m venv .venv && source .venv/bin/activate`
+4. Install dependencies: `pip install -r requirements.txt`
+5. Copy `.env.example` to `.env` and add your API keys
+6. Run: `python main.py`
 
 `.env` needs:
 
@@ -95,4 +96,4 @@ Master score is the average of LLM-judge and rule-based group scores. Latest: 9.
 
 ## Stack
 
-- Python 3, gpt-5.4-mini for answers and eval, gpt-5.4-nano for routing and validation, text-embedding-3-small (OpenAI) for embeddings, ChromaDB for vector storage, BM25 (rank-bm25) for keyword search, LangChain for chunking, SEC EDGAR, FMP API, NewsAPI for data sources, Rich for CLI rendering
+- Python 3.10+, gpt-5.4-mini for answers and eval, gpt-5.4-nano for routing and validation, text-embedding-3-small (OpenAI) for embeddings, ChromaDB for vector storage, BM25 (rank-bm25) for keyword search, LangChain for chunking, SEC EDGAR, FMP API, NewsAPI for data sources, Rich for CLI rendering

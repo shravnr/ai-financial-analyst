@@ -180,7 +180,7 @@ def fetch_sec_filings(
         return result
 
     logger.info(f"Found {len(filings)} filings for {ticker}: "
-                f"{[f'{f['form']} ({f['filingDate']})' for f in filings]}")
+                f"{['{} ({})'.format(f['form'], f['filingDate']) for f in filings]}")
 
     save_dir = RAW_DATA_DIR / ticker / "sec"
     save_dir.mkdir(parents=True, exist_ok=True)
