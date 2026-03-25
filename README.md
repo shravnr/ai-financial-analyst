@@ -47,6 +47,7 @@ User question
   -> Guardrails validate the answer:
        Rule-based: citations present? numbers traceable to sources?
        LLM grounding: do cited sources actually support the claims? (gpt-5.4-nano)
+       If issues found: one correction pass feeds warnings back to the LLM
   -> Citation postprocessor: strips LLM-generated footnotes, rebuilds from real metadata
 ```
 
@@ -60,7 +61,7 @@ User question
 
 **Retrieval-based boundaries.** Instead of guessing data scope from dates (breaks on fiscal year mismatches), the system injects actual retrieved date ranges into tool responses. The LLM sees exactly which periods it has and responds accordingly.
 
-**Two-layer guardrails.** Rule-based checks catch missing citations and unverifiable numbers. LLM grounding catches cases where a citation exists but doesn't actually support the claim.
+**Two-layer guardrails with self-correction.** Rule-based checks catch missing citations and unverifiable numbers. LLM grounding catches cases where a citation exists but doesn't actually support the claim. If either layer flags issues, the answer goes through one correction pass — the flagged issues are fed back to the LLM to fix. The corrected answer is only used if it actually reduces warnings.
 
 ## Evaluation
 

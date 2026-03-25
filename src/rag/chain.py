@@ -5,7 +5,9 @@ from datetime import datetime
 
 from openai import OpenAI
 
-from src.config import OPENAI_API_KEY, LLM_MODEL
+import requests
+
+from src.config import OPENAI_API_KEY, LLM_MODEL, FMP_API_KEY, FMP_BASE_URL
 from src.processing.vector_store import query as vector_query
 from src.rag.query_router import route_query
 from src.guardrails.validator import validate_response
@@ -85,12 +87,25 @@ TOOLS = [
             },
         },
     },
+    {
+        "type": "function",
+        "function": {
+            "name": "get_stock_quote",
+            "description": "Get the current live stock quote for a company — price, change, volume, market cap. Use this for any question about current/today's stock price, market cap, or trading activity. This hits a live API, not pre-indexed data.",
+            "parameters": {
+                "type": "object",
+                "properties": {},
+                "required": [],
+            },
+        },
+    },
 ]
 
 _TOOL_SOURCE_MAP = {
     "search_sec_filings": ["sec"],
     "search_financial_data": ["fmp"],
     "search_news": ["news"],
+    "get_stock_quote": None,
 }
 
 SYSTEM_PROMPT = """You are a professional, straightforward financial analyst. Direct, specific, and concise.
@@ -183,6 +198,55 @@ def _format_tool_results(
     return "\n\n---\n\n".join(parts), source_counter
 
 
+def _fetch_live_quote(ticker: str) -> str:
+    try:
+        resp = requests.get(
+            f"{FMP_BASE_URL}/quote",
+            params={"symbol": ticker, "apikey": FMP_API_KEY},
+            timeout=10,
+        )
+        resp.raise_for_status()
+        data = resp.json()
+
+        if not data or (isinstance(data, list) and len(data) == 0):
+            return "No live quote available for this ticker."
+
+        q = data[0] if isinstance(data, list) else data
+        parts = [f"[Source: LIVE] {ticker} — Real-time Quote"]
+        fields = [
+            ("Price", "price"), ("Change", "change"),
+            ("Change %", "changesPercentage"), ("Day Low", "dayLow"),
+            ("Day High", "dayHigh"), ("Year Low", "yearLow"),
+            ("Year High", "yearHigh"), ("Market Cap", "marketCap"),
+            ("Volume", "volume"), ("Avg Volume", "avgVolume"),
+            ("Open", "open"), ("Previous Close", "previousClose"),
+            ("EPS", "eps"), ("PE", "pe"), ("Name", "name"),
+            ("Exchange", "exchange"),
+        ]
+        for label, key in fields:
+            if key in q and q[key] is not None:
+                val = q[key]
+                if isinstance(val, (int, float)) and not isinstance(val, bool):
+                    if key in ("marketCap", "volume", "avgVolume"):
+                        val = f"{val:,.0f}"
+                    elif isinstance(val, float):
+                        val = f"{val:,.2f}"
+                parts.append(f"  {label}: {val}")
+
+        timestamp = q.get("timestamp")
+        if timestamp:
+            try:
+                dt = datetime.fromtimestamp(int(timestamp))
+                parts.append(f"  As of: {dt.strftime('%Y-%m-%d %H:%M:%S')}")
+            except (ValueError, TypeError):
+                parts.append(f"  As of: {timestamp}")
+
+        return "\n".join(parts)
+    except Exception as e:
+        logger.warning(f"Live quote failed for {ticker}: {e}")
+        return f"Could not fetch live quote for {ticker}: {e}"
+
+
 def _execute_tool(
     tool_name: str,
     args: dict,
@@ -191,6 +255,26 @@ def _execute_tool(
     seen_sources: dict,
     source_metadata: dict,
 ) -> tuple[str, list[dict], int]:
+    # Live quote — direct API call, no retrieval
+    if tool_name == "get_stock_quote":
+        result_str = _fetch_live_quote(ticker)
+        source_counter += 1
+        source_metadata[source_counter] = {
+            "source_type": "live",
+            "document_type": "stock_quote",
+            "ticker": ticker,
+            "company_name": "",
+            "date": datetime.now().strftime("%Y-%m-%d"),
+            "section": "Real-time Quote",
+            "file_path": "",
+            "edgar_url": "",
+            "url": "",
+        }
+        seen_sources[f"{ticker}_live_quote"] = source_counter
+        # Replace [Source: LIVE] with numbered source for citation consistency
+        result_str = result_str.replace("[Source: LIVE]", f"[Source {source_counter}]")
+        return result_str, [], source_counter
+
     query = args.get("query", "")
     n_results = max(args.get("n_results", 8), 5)  # Minimum 5 to avoid thin context
     source_types = _TOOL_SOURCE_MAP.get(tool_name)
@@ -488,6 +572,52 @@ def ask(
 
     if validation["warnings"]:
         logger.warning(f"Guardrail warnings: {validation['warnings']}")
+
+        # One correction pass — feed warnings back to the LLM
+        actionable = []
+        for w in validation["checks"].get("citation_check", []):
+            actionable.append(f"- {w} → Add an inline [N] citation from the sources.")
+        for w in validation["checks"].get("number_verification", []):
+            actionable.append(f"- {w} → Remove this number or correct it using only source data.")
+        for w in validation["checks"].get("grounding_check", []):
+            actionable.append(f"- {w} → Remove this claim entirely.")
+
+        if actionable:
+            correction_prompt = (
+                "A fact-checker flagged issues with your answer. Fix them and return "
+                "the corrected answer. Do NOT add commentary about the corrections.\n\n"
+                "Issues:\n" + "\n".join(actionable) + "\n\n"
+                "Original answer:\n" + answer + "\n\n"
+                "Source context:\n" + full_context[:6000]
+            )
+            try:
+                correction = _client.chat.completions.create(
+                    model=LLM_MODEL,
+                    messages=[
+                        {"role": "system", "content": SYSTEM_PROMPT},
+                        {"role": "user", "content": correction_prompt},
+                    ],
+                    temperature=0,
+                    max_completion_tokens=2000,
+                )
+                corrected = correction.choices[0].message.content
+                cu = correction.usage
+                total_prompt_tokens += cu.prompt_tokens
+                total_completion_tokens += cu.completion_tokens
+
+                corrected = _postprocess_citations(corrected, source_metadata)
+
+                # Re-validate the corrected answer
+                revalidation = validate_response(corrected, full_context, len(all_chunks))
+                if len(revalidation["warnings"]) < len(validation["warnings"]):
+                    answer = corrected
+                    validation = revalidation
+                    validation["corrected"] = True
+                    logger.info("Guardrail correction improved the answer")
+                else:
+                    logger.info("Guardrail correction did not improve, keeping original")
+            except Exception as e:
+                logger.warning(f"Guardrail correction failed ({e}), keeping original")
 
     total_tokens = total_prompt_tokens + total_completion_tokens
 

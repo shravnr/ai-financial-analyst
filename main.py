@@ -62,7 +62,7 @@ def _route_input(user_message: str) -> dict:
                 {"role": "user", "content": user_message},
             ],
             response_format={"type": "json_object"},
-            temperature=0.7,
+            temperature=0,
             max_completion_tokens=150,
         )
         return json.loads(resp.choices[0].message.content)
@@ -215,6 +215,22 @@ def main():
                         continue
                 else:
                     current_ticker = ticker
+
+            # Bare company name / ticker without a real question
+            stripped = user_input.lower().strip().rstrip("?.! ")
+            company_name = (route.get("company") or "").lower()
+            if stripped in (ticker.lower(), company_name) or (
+                len(user_input.split()) <= 2 and not any(
+                    w in user_input.lower() for w in ("what", "how", "why", "when", "tell", "show", "compare", "is", "are", "does", "did", "can", "will")
+                )
+            ):
+                console.print(
+                    f"\n[bold green]analyst >[/bold green] "
+                    f"Got it — what would you like to know about {ticker}? "
+                    f"Try something like earnings, risks, or recent news."
+                )
+                console.print()
+                continue
 
             console.print(f"\n[bold green]analyst >[/bold green] [dim]{random.choice(_THINKING_MESSAGES)}[/dim]")
             result = ask(user_input, current_ticker)
