@@ -7,6 +7,7 @@ rank_bm25>=0.2.2
 
 # Text chunking
 langchain>=0.2.0
+langchain-text-splitters>=0.2.0
 
 # Data fetching and parsing
 requests

@@ -1,0 +1,342 @@
+{
+  "timestamp": "2026-03-25T11:51:06.218637",
+  "master_score": 9.5,
+  "verdict": "PASS",
+  "sub_scores": {
+    "llm_judge": 9.3,
+    "rule_based": 9.7,
+    "consistency": 9.0,
+    "grounding": 8.8,
+    "boundary": 10.0,
+    "verification": 9.4,
+    "smoke": 10.0
+  },
+  "deep_eval": {
+    "ticker": "AAPL",
+    "signals": {
+      "consistency": {
+        "passed": 4,
+        "total": 4,
+        "avg_score": 4.5,
+        "details": [
+          {
+            "name": "Revenue",
+            "question_a": "What are Apple's revenue and profit trends over the past two years?",
+            "question_b": "How much revenue and net income has Apple generated recently?",
+            "answer_a": "Apple\u2019s revenue rose from $391.04 billion[1] in FY 2024 to $416.16 billion[2] in FY 2025, an increase of about 6.4%.\n\nProfit also improved across the board:\n- Gross profit increased from $180.68 billion[1] to $195.20 billion[2]\n- Operating income increased from $123.22 billion[1] to $133.05 billion[2]\n- Net income increased from $93.74 billion[1] to $112.01 billion[2]\n\nMargins improved too:\n- Gross margin: 46.21%[1] to 46.91%[2]\n- Operating margin: 31.51%[1] to 31.97%[2]\n- Net margin: 23.97%[1] to 26.92%[2]\n\nOverall, Apple showed higher revenue and stronger profitability over the past two fiscal years.\n\n\n---\n### Citations\n- [1] FMP \u2014 AAPL Income Statement (2024-09-28), Income Statement - FY 2024\n- [2] FMP \u2014 AAPL Income Statement (2025-09-27), Income Statement - FY 2025",
+            "answer_b": "Apple generated $416.16 billion in revenue and $112.01 billion in net income in FY 2025[1]. In FY 2024, it generated $391.04 billion in revenue and $93.74 billion in net income[2].\n\n\n---\n### Citations\n- [1] FMP \u2014 AAPL Income Statement (2025-09-27), Income Statement - FY 2025\n- [2] FMP \u2014 AAPL Income Statement (2024-09-28), Income Statement - FY 2024",
+            "score": 5,
+            "reasoning": "Both answers report the same FY 2024 and FY 2025 revenue and net income figures for Apple, with FY 2025 higher than FY 2024. Answer A adds extra profitability and margin details, but nothing in Answer B conflicts with those facts.",
+            "passed": true,
+            "pipeline_tokens": 9705,
+            "judge_tokens": 714
+          },
+          {
+            "name": "Risks",
+            "question_a": "What are the biggest risks to Apple's business according to their 10-K?",
+            "question_b": "What risk factors does Apple disclose in SEC filings?",
+            "answer_a": "Apple\u2019s 10-K highlights these biggest business risks:\n\n- **Macroeconomic weakness**: Apple says its operations depend significantly on global and regional economic conditions, and adverse conditions like slow growth, recession, unemployment, inflation, tighter credit, higher interest rates, and currency fluctuations can reduce consumer confidence and demand[1].\n- **Global supply chain exposure**: Apple has a large, complex international supply chain, with a majority of supplier facilities outside the U.S., so disruptions or weakness among suppliers, manufacturers, logistics providers, distributors, carriers, and developers can hurt operations[1].\n- **Geopolitical and business interruptions**: Political events, trade disputes, geopolitical tensions, conflict, terrorism, natural disasters, public health issues, industrial accidents, and other interruptions can materially affect Apple and its partners[2].\n- **Competition and product transition risk**: Apple must keep introducing and transitioning products and services in highly competitive markets; failure to do so, or quality issues, ramp-up problems, inventory mismanagement, or weak market acceptance, can materially hurt results[3].\n- **Dependence on outsourcing partners**: Apple relies on component and product manufacturing and logistics partners, many outside the U.S., which adds execution and supply risk[3].\n- **Legal and regulatory risk**: Unfavorable legal proceedings or government investigations could adversely impact business, results, and financial condition[4].\n- **New business strategies and acquisitions**: New ventures or acquisitions can distract management, create liabilities and expenses, face regulatory hurdles, and fail to deliver expected returns[4].\n- **Retail store risk**: Apple\u2019s retail operations face risks tied to retail demand, construction and operating costs, inventory value changes, and lease renewals[4].\n\nIf you want, I can also rank these by how prominently Apple discusses them in the filing.\n\n\n---\n### Citations\n- [1] SEC \u2014 AAPL 10-K (2025-10-31), Item 1 - Business \u2192 https://www.sec.gov/Archives/edgar/data/320193/000032019325000079/aapl-20250927.htm\n- [2] SEC \u2014 AAPL 10-Q (2025-05-02), Part II - Other Information \u2192 https://www.sec.gov/Archives/edgar/data/320193/000032019325000057/aapl-20250329.htm\n- [3] SEC \u2014 AAPL 10-K (2025-10-31), Financial Statements \u2192 https://www.sec.gov/Archives/edgar/data/320193/000032019325000079/aapl-20250927.htm\n- [4] SEC \u2014 AAPL 10-K (2024-11-01), Financial Statements \u2192 https://www.sec.gov/Archives/edgar/data/320193/000032019324000123/aapl-20240928.htm",
+            "answer_b": "Apple discloses these main risk factors in its SEC filings:\n\n- **Macroeconomic and industry conditions**: global/regional economic weakness, recession, inflation, tighter credit, higher interest rates, currency fluctuations, and reduced consumer spending can hurt demand and operations[1][2].\n- **International operations and supply chain exposure**: Apple says sales outside the U.S. represent a majority of net sales, and its supply chain is large and complex with many supplier facilities outside the U.S.[1]\n- **Supply shortages and price increases**: shortages and higher input costs can materially adversely affect business and financial results[3].\n- **Competition**: intense competition, price cutting, imitation of product features, and competitors with broad product lines or low-cost structures can pressure margins and market share[3].\n- **Product and service quality / defects**: design and manufacturing defects, software bugs, outages, slowdowns, errors, and vulnerabilities can cause warranty costs, recalls, liability claims, regulatory fines, reputational damage, and lost sales[3][2].\n- **New product and service introduction risk**: Apple must manage frequent product transitions, new technologies, ramp-up issues, third-party integration, inventory, and market acceptance; failures can reduce demand and margins[3][2].\n- **Single-product concentration**: Apple says a significant portion of net sales comes from a single product, so weaker demand for that product could significantly affect quarterly sales[2].\n- **Foreign exchange risk**: changes in the U.S. dollar versus local currencies can hurt gross margins and results[2].\n- **Political, trade, and geopolitical disruptions**: trade disputes, geopolitical tensions, conflict, terrorism, natural disasters, public health issues, industrial accidents, and other interruptions can affect Apple and its partners[2].\n- **Partner and counterparty risk**: suppliers, contract manufacturers, logistics providers, distributors, carriers, developers, derivative counterparties, and financial institutions can face instability, insolvency, or failure[1][2].\n- **Credit, liquidity, and collectibility risk**: adverse economic conditions can increase credit risk on receivables, reduce liquidity, and limit Apple\u2019s ability to issue debt[2].\n- **Inventory and asset write-down risk**: Apple is exposed to inventory write-downs, asset write-downs, and purchase commitment cancellation risk[3].\n\nIf you want, I can also condense these into the **top 5 risks** or group them by **operational, financial, legal, and market risks**.\n\n\n---\n### Citations\n- [1] SEC \u2014 AAPL 10-K (2025-10-31), Item 1 - Business \u2192 https://www.sec.gov/Archives/edgar/data/320193/000032019325000079/aapl-20250927.htm\n- [2] SEC \u2014 AAPL 10-K (2024-11-01), Financial Statements \u2192 https://www.sec.gov/Archives/edgar/data/320193/000032019324000123/aapl-20240928.htm\n- [3] SEC \u2014 AAPL 10-K (2025-10-31), Financial Statements \u2192 https://www.sec.gov/Archives/edgar/data/320193/000032019325000079/aapl-20250927.htm",
+            "score": 4,
+            "reasoning": "Both answers identify largely the same core Apple risk themes: macroeconomic weakness, supply chain and international exposure, geopolitical disruptions, competition, product transition/quality issues, and legal/regulatory or partner-related risks. Answer B includes several additional specific risks (foreign exchange, single-product concentration, credit/liquidity, inventory write-downs), but these do not conflict with Answer A; they just add detail.",
+            "passed": true,
+            "pipeline_tokens": 17639,
+            "judge_tokens": 1626
+          },
+          {
+            "name": "Cash position",
+            "question_a": "What is Apple's current cash position and is it generating or burning cash?",
+            "question_b": "How much cash does Apple hold and what is its free cash flow?",
+            "answer_a": "Apple\u2019s cash & short-term investments were $54.70 billion at FY 2025 year-end[1], down from $65.17 billion in FY 2024[2]. Its cash & equivalents alone were $35.93 billion[1].\n\nIt is generating cash: operating cash flow was $111.48 billion in FY 2025[3] and free cash flow was $98.77 billion[3]. Net change in cash was positive at $5.99 billion[3], so it was not burning cash overall.\n\n\n---\n### Citations\n- [1] FMP \u2014 AAPL Balance Sheet (2025-09-27), Balance Sheet - FY 2025\n- [2] FMP \u2014 AAPL Balance Sheet (2024-09-28), Balance Sheet - FY 2024\n- [3] FMP \u2014 AAPL Cash Flow Statement (2025-09-27), Cash Flow Statement - FY 2025",
+            "answer_b": "Apple holds $54.70 billion in cash and short-term investments as of FY 2025[1]. Its free cash flow was $98.77 billion in FY 2025[2].\n\n\n---\n### Citations\n- [1] FMP \u2014 AAPL Balance Sheet (2025-09-27), Balance Sheet - FY 2025\n- [2] FMP \u2014 AAPL Cash Flow Statement (2025-09-27), Cash Flow Statement - FY 2025",
+            "score": 4,
+            "reasoning": "Both answers agree that Apple holds $54.70 billion in cash and short-term investments as of FY 2025 and that its free cash flow was $98.77 billion. Answer A adds extra context about cash equivalents, operating cash flow, and that Apple is generating rather than burning cash, but nothing in Answer B conflicts with those facts.",
+            "passed": true,
+            "pipeline_tokens": 10844,
+            "judge_tokens": 664
+          },
+          {
+            "name": "News",
+            "question_a": "What is the latest news about Apple?",
+            "question_b": "Are there any recent headlines or developments about Apple?",
+            "answer_a": "The latest relevant Apple news is that Apple unveiled \u201cApple Business,\u201d an all-in-one platform for businesses that includes device management, customer outreach, employee apps and tools, and expert support[1]. Another report says Apple Maps is getting a significant update that will include ads, which has already drawn frustration from users[2].\n\n\n---\n### Citations\n- [1] NEWS \u2014 AAPL News Article (2026-03-24), News - Mactrast.com \u2192 https://www.mactrast.com/2026/03/apple-announces-apple-business/\n- [2] NEWS \u2014 AAPL News Article (2026-03-24), News - BGR \u2192 https://www.bgr.com/2131165/apple-maps-search-ads-feature-controversial/",
+            "answer_b": "Recent Apple headlines are mixed and mostly product/service related:\n\n- Apple announced a new all-in-one business platform called \u201cApple Business,\u201d aimed at helping companies manage devices, reach customers, equip employees, and get support.[1]\n- A separate report says a significant Apple Maps update is drawing frustration because it appears to include ads on Apple Maps as part of the new business platform.[2]\n\nThe other recent results were unrelated Apple-name matches, not Apple Inc. news.[3][4][5]\n\n\n---\n### Citations\n- [1] NEWS \u2014 AAPL News Article (2026-03-24), News - Mactrast.com \u2192 https://www.mactrast.com/2026/03/apple-announces-apple-business/\n- [2] NEWS \u2014 AAPL News Article (2026-03-24), News - BGR \u2192 https://www.bgr.com/2131165/apple-maps-search-ads-feature-controversial/\n- [3] NEWS \u2014 AAPL News Article (2026-03-24), News - Pypi.org \u2192 https://pypi.org/project/jax-mps/0.9.11.dev473/\n- [4] NEWS \u2014 AAPL News Article (2026-03-24), News - Rlsbb.to \u2192 https://post.rlsbb.to/pazu-streamget-2-9-5/\n- [5] NEWS \u2014 AAPL News Article (2026-03-24), News - Pypi.org \u2192 https://pypi.org/project/superdoc-sdk-cli-darwin-arm64/1.1.0/",
+            "score": 5,
+            "reasoning": "Both answers report the same two Apple-related developments: the launch of an all-in-one \u2018Apple Business\u2019 platform and a report that Apple Maps is getting ads, which is causing frustration. ANSWER_B adds that other search results were unrelated, but that does not conflict with ANSWER_A.",
+            "passed": true,
+            "pipeline_tokens": 12449,
+            "judge_tokens": 833
+          }
+        ]
+      },
+      "grounding": {
+        "passed": 9,
+        "total": 10,
+        "avg_score": 4.4,
+        "well_grounded": 9,
+        "details": [
+          {
+            "capability": "Revenue trends",
+            "question": "What are Apple's revenue and profit trends over the past two years?",
+            "answer": "Apple\u2019s revenue and profit both increased over the past two fiscal years. Revenue rose to $416.16 billion[1] in FY 2025 from $391.04 billion[2] in FY 2024, a gain of about 6.4%. Net income increased to $112.01 billion[1] from $93.74 billion[2], up about 19.5%.\n\nProfitability also improved modestly: gross margin edged up to 46.91%[1] from 46.21%[2], operating margin to 31.97%[1] from 31.51%[2], and net margin to 26.92%[1] from 23.97%[2]. Operating income rose to $133.05 billion[1] from $123.22 billion[2].\n\n\n---\n### Citations\n- [1] FMP \u2014 AAPL Income Statement (2025-09-27), Income Statement - FY 2025\n- [2] FMP \u2014 AAPL Income Statement (2024-09-28), Income Statement - FY 2024",
+            "grounding_score": 5,
+            "grounding_reasoning": "The answer is fully supported by the provided income statements. All cited figures for revenue, net income, margins, and operating income match the FY 2025 and FY 2024 source data, and the trend interpretation (both revenue and profit increased) is directly grounded in those numbers.",
+            "grounding_passed": true,
+            "citations": 14,
+            "has_citations": true,
+            "numbers_total": 6,
+            "numbers_verified": 6,
+            "pipeline_tokens": 4902,
+            "judge_tokens": 1025
+          },
+          {
+            "capability": "Gross margin",
+            "question": "Has Apple's gross margin improved or declined recently?",
+            "answer": "Apple\u2019s gross margin has improved recently: it rose to 46.91%[1] in FY 2025 from 46.21%[2] in FY 2024, an increase of 0.70 percentage points.\n\n\n---\n### Citations\n- [1] FMP \u2014 AAPL Income Statement (2025-09-27), Income Statement - FY 2025\n- [2] FMP \u2014 AAPL Income Statement (2024-09-28), Income Statement - FY 2024",
+            "grounding_score": 5,
+            "grounding_reasoning": "The answer is directly supported by the context: FY 2025 gross margin is 46.91% and FY 2024 gross margin is 46.21%, so it did improve. The stated increase of 0.70 percentage points is also correct.",
+            "grounding_passed": true,
+            "citations": 4,
+            "has_citations": true,
+            "numbers_total": 0,
+            "numbers_verified": 0,
+            "pipeline_tokens": 4770,
+            "judge_tokens": 892
+          },
+          {
+            "capability": "Biggest risks (10-K)",
+            "question": "What are the biggest risks to Apple's business according to their 10-K?",
+            "answer": "Apple\u2019s 10-K highlights these biggest business risks:\n\n- **Macroeconomic weakness and consumer spending pressure**: Apple says its operations depend significantly on global and regional economic conditions, and adverse conditions like recession, inflation, tighter credit, higher interest rates, and currency fluctuations can reduce demand for its products and services[1].\n- **Global supply chain and international exposure**: Sales outside the U.S. represent a majority of net sales, and a majority of supplier facilities are outside the U.S., so Apple is exposed to disruptions across suppliers, manufacturers, logistics providers, distributors, carriers, and developers[1].\n- **Geopolitical, trade, and other disruptions**: Political events, trade disputes, geopolitical tensions, conflict, terrorism, natural disasters, public health issues, industrial accidents, and other business interruptions can materially affect Apple and its partners[2].\n- **Competition and product transition risk**: Apple must continually introduce new products, services, and technologies, manage transitions, and stimulate demand in highly competitive markets; failure to do so can hurt business, margins, and stock price[3].\n- **Execution risk on new products and technologies**: Risks include ramp-up issues, third-party software/support dependence, manufacturing commitments, inventory management, product availability, and quality defects; new offerings may replace existing ones and produce lower revenues and margins[3].\n- **Legal and regulatory risk**: Unfavorable results in legal proceedings or government investigations could adversely affect Apple\u2019s business, results of operations, and financial condition[4].\n- **Cybersecurity risk**: Apple notes cybersecurity threats as a material risk area and says insurance may be insufficient to cover all losses or claims[4].\n- **Acquisitions and new business strategies**: New ventures or acquisitions can distract management, create liabilities and expenses, face regulatory hurdles, and fail to deliver expected returns[4].\n- **Retail store risk**: Apple\u2019s retail operations face risks tied to retail activity, store construction and operating costs, inventory value changes, and lease renewals[4].\n\n\n---\n### Citations\n- [1] SEC \u2014 AAPL 10-K (2025-10-31), Item 1 - Business \u2192 https://www.sec.gov/Archives/edgar/data/320193/000032019325000079/aapl-20250927.htm\n- [2] SEC \u2014 AAPL 10-Q (2025-05-02), Part II - Other Information \u2192 https://www.sec.gov/Archives/edgar/data/320193/000032019325000057/aapl-20250329.htm\n- [3] SEC \u2014 AAPL 10-K (2025-10-31), Financial Statements \u2192 https://www.sec.gov/Archives/edgar/data/320193/000032019325000079/aapl-20250927.htm\n- [4] SEC \u2014 AAPL 10-K (2024-11-01), Financial Statements \u2192 https://www.sec.gov/Archives/edgar/data/320193/000032019324000123/aapl-20240928.htm",
+            "grounding_score": 4,
+            "grounding_reasoning": "Most of the answer is directly supported by the context: macroeconomic risk, international supply chain exposure, geopolitical disruptions, legal/regulatory risk, new business strategies/acquisitions, and retail store risks all appear in the cited sources. A few items are somewhat stretched or not explicitly shown in the provided context, such as the detailed competition/product-transition framing and the cybersecurity discussion, but these are broadly consistent with Apple\u2019s risk disclosures.",
+            "grounding_passed": true,
+            "citations": 13,
+            "has_citations": true,
+            "numbers_total": 0,
+            "numbers_verified": 0,
+            "pipeline_tokens": 12652,
+            "judge_tokens": 3390
+          },
+          {
+            "capability": "Earnings announcement",
+            "question": "Summarize Apple's most recent earnings announcement.",
+            "answer": "Apple\u2019s most recent earnings announcement in the returned data is its FY 2025 results: revenue was $416.16 billion[1], up from $391.04 billion in FY 2024[2], and net income was $112.01 billion[1] versus $93.74 billion[2]. Operating income rose to $133.05 billion[1] from $123.22 billion[2], while operating margin improved to 31.97%[1] from 31.51%[2].\n\nCash generation was strong: operating cash flow was $111.48 billion[3] and free cash flow was $98.77 billion[3]. Capital expenditures were $12.71 billion[3], and Apple repurchased $90.71 billion of common stock[3].\n\nOn the balance sheet, total debt was $112.38 billion[4] and net debt was $76.44 billion[4], down from $119.06 billion[5] and $89.12 billion[5] in FY 2024. Cash and short-term investments were $54.70 billion[4].\n\nBy product line, Services was the largest disclosed category at $109.16 billion[6], followed by iPhone at $201.18 billion[6], Mac at $33.71 billion[6], iPad at $28.02 billion[6], and Wearables, Home and Accessories at $35.69 billion[6].\n\n\n---\n### Citations\n- [1] FMP \u2014 AAPL Income Statement (2025-09-27), Income Statement - FY 2025\n- [2] FMP \u2014 AAPL Income Statement (2024-09-28), Income Statement - FY 2024\n- [3] FMP \u2014 AAPL Cash Flow Statement (2025-09-27), Cash Flow Statement - FY 2025\n- [4] FMP \u2014 AAPL Balance Sheet (2025-09-27), Balance Sheet - FY 2025\n- [5] FMP \u2014 AAPL Balance Sheet (2024-09-28), Balance Sheet - FY 2024\n- [6] SEC \u2014 AAPL 10-K (2025-10-31), Financial Statements \u2192 https://www.sec.gov/Archives/edgar/data/320193/000032019325000079/aapl-20250927.htm",
+            "grounding_score": 4,
+            "grounding_reasoning": "Most of the answer is directly supported by the provided context: the FY 2025 income statement, cash flow, balance sheet, and segment revenue figures match the cited SEC/FMP data. The main limitation is that the prompt asks for a summary of the most recent earnings announcement, but the answer instead gives a detailed financial snapshot without any earnings-call context or explicit announcement details; still, the factual claims themselves are well grounded.",
+            "grounding_passed": true,
+            "citations": 28,
+            "has_citations": true,
+            "numbers_total": 20,
+            "numbers_verified": 20,
+            "pipeline_tokens": 15551,
+            "judge_tokens": 4236
+          },
+          {
+            "capability": "YoY revenue comparison",
+            "question": "How does Apple's most recent fiscal year revenue compare to the prior year?",
+            "answer": "Apple\u2019s most recent fiscal year revenue was $416.16 billion[1], up from $391.04 billion[2] in the prior year. That\u2019s an increase of $25.12 billion, or about 6.4% year over year.\n\n\n---\n### Citations\n- [1] FMP \u2014 AAPL Income Statement (2025-09-27), Income Statement - FY 2025\n- [2] FMP \u2014 AAPL Income Statement (2024-09-28), Income Statement - FY 2024",
+            "grounding_score": 5,
+            "grounding_reasoning": "The answer is directly supported by the context: FY 2025 revenue is $416.16 billion and FY 2024 revenue is $391.04 billion. The stated increase of $25.12 billion and roughly 6.4% year over year is a correct calculation from those figures.",
+            "grounding_passed": true,
+            "citations": 4,
+            "has_citations": true,
+            "numbers_total": 3,
+            "numbers_verified": 3,
+            "pipeline_tokens": 4784,
+            "judge_tokens": 908
+          },
+          {
+            "capability": "Latest news",
+            "question": "What is the latest news about Apple?",
+            "answer": "The latest Apple news is that Apple is continuing its 50th anniversary celebrations with events in the UK, Canada, Mexico, Japan, Thailand, and other countries[1]. Other recent coverage includes a reported Apple Maps update that would add ads and has already drawn user frustration[2].\n\n\n---\n### Citations\n- [1] NEWS \u2014 AAPL News Article (2026-03-24), News - MacRumors \u2192 https://www.macrumors.com/2026/03/24/apple-50th-anniversary-events/\n- [2] NEWS \u2014 AAPL News Article (2026-03-24), News - BGR \u2192 https://www.bgr.com/2131165/apple-maps-search-ads-feature-controversial/",
+            "grounding_score": 4,
+            "grounding_reasoning": "The answer is well grounded in the context: Source 1 directly supports the claim about Apple\u2019s 50th anniversary events continuing in the UK, Canada, Mexico, Japan, Thailand, and beyond. Source 5 supports the claim that Apple Maps is getting a significant update involving ads and that users are frustrated. The only minor issue is that the answer frames these as the \u201clatest Apple news\u201d without establishing exclusivity, but the factual claims themselves are supported.",
+            "grounding_passed": true,
+            "citations": 4,
+            "has_citations": true,
+            "numbers_total": 0,
+            "numbers_verified": 0,
+            "pipeline_tokens": 5036,
+            "judge_tokens": 1255
+          },
+          {
+            "capability": "Business segments",
+            "question": "What are Apple's main business segments and revenue drivers?",
+            "answer": "Apple\u2019s business is organized around two broad segments: products and services[1][2].\n\n- Products include iPhone, Mac, iPad, and Wearables, Home and Accessories[1][2].\n- Services include advertising, AppleCare, cloud services, and digital content platforms such as the App Store[1][2].\n\nThe main revenue driver is iPhone. In Q1 2026, iPhone sales were $85.3B out of $143.8B total net sales[3].\n\nServices is the other major growth driver. In Q1 2026, Services revenue was $30.0B, up 14% year over year[3].\n\nOther product lines are smaller and more mixed:\n- Mac: $30.0B in FY 2024, up 2%, mainly from higher laptop sales[4].\n- iPad: $26.7B in FY 2024, down 6%, mainly due to lower iPad Pro and entry-level iPad sales, partly offset by iPad Air[4].\n- Wearables, Home and Accessories: $37.0B in FY 2024, down 7%, mainly due to lower Wearables and Accessories sales[4].\n\nGeographically, Apple\u2019s largest regions are the Americas and Europe, and both were helped in 2024 by Services growth; Greater China declined mainly because of lower iPhone and iPad sales[4].\n\n\n---\n### Citations\n- [1] SEC \u2014 AAPL 10-K (2024-11-01), Risk Factors \u2192 https://www.sec.gov/Archives/edgar/data/320193/000032019324000123/aapl-20240928.htm\n- [2] SEC \u2014 AAPL 10-K (2025-10-31), Risk Factors \u2192 https://www.sec.gov/Archives/edgar/data/320193/000032019325000079/aapl-20250927.htm\n- [3] SEC \u2014 AAPL 10-Q (2026-01-30), Financial Statements \u2192 https://www.sec.gov/Archives/edgar/data/320193/000032019326000006/aapl-20251227.htm\n- [4] SEC \u2014 AAPL 10-Q (2024-08-02), Financial Statements \u2192 https://www.sec.gov/Archives/edgar/data/320193/000032019324000081/aapl-20240629.htm",
+            "grounding_score": 2,
+            "grounding_reasoning": "The answer correctly identifies Apple\u2019s broad product and services offerings, and the Q1 2026 figures for iPhone, Services, and total net sales are supported by Source 3. However, several claims are unsupported or incorrect: the FY 2024 segment revenue numbers for Mac, iPad, and Wearables/Home/Accessories do not match the context, and the geographic discussion about Americas/Europe being helped by Services growth in 2024 is not supported by the provided source. Because multiple specific factual claims are wrong or not grounded, the answer scores low.",
+            "grounding_passed": false,
+            "citations": 16,
+            "has_citations": true,
+            "numbers_total": 6,
+            "numbers_verified": 0,
+            "pipeline_tokens": 15541,
+            "judge_tokens": 3969
+          },
+          {
+            "capability": "Analyst EPS estimates",
+            "question": "What are analyst EPS estimates for Apple?",
+            "answer": "Apple\u2019s analyst EPS estimates are:\n\n- 2027-09-27: low $8.41, average $9.31, high $9.92[1]\n- 2028-09-27: low $8.94, average $10.27, high $11.19[2]\n- 2029-09-27: low $11.09, average $11.70, high $12.51[3]\n- 2030-09-27: low $12.64, average $13.33, high $14.26[4]\n\n\n---\n### Citations\n- [1] FMP \u2014 AAPL Analyst Estimates (2027-09-27), Analyst Estimates - 2027-09-27\n- [2] FMP \u2014 AAPL Analyst Estimates (2028-09-27), Analyst Estimates - 2028-09-27\n- [3] FMP \u2014 AAPL Analyst Estimates (2029-09-27), Analyst Estimates - 2029-09-27\n- [4] FMP \u2014 AAPL Analyst Estimates (2030-09-27), Analyst Estimates - 2030-09-27",
+            "grounding_score": 5,
+            "grounding_reasoning": "All four EPS estimate triplets in the answer exactly match the values shown in the context sources for 2027-09-27 through 2030-09-27. The answer is fully grounded in the provided data, with no unsupported factual claims.",
+            "grounding_passed": true,
+            "citations": 8,
+            "has_citations": true,
+            "numbers_total": 12,
+            "numbers_verified": 12,
+            "pipeline_tokens": 5088,
+            "judge_tokens": 1271
+          },
+          {
+            "capability": "R&D spending",
+            "question": "How much does Apple invest in research and development?",
+            "answer": "Apple spent $34.55 billion on research and development in FY 2025[1], up from $31.37 billion in FY 2024[2]. That\u2019s an increase of $3.18 billion, or about 10.1% year over year.\n\n\n---\n### Citations\n- [1] FMP \u2014 AAPL Income Statement (2025-09-27), Income Statement - FY 2025\n- [2] FMP \u2014 AAPL Income Statement (2024-09-28), Income Statement - FY 2024",
+            "grounding_score": 5,
+            "grounding_reasoning": "The answer\u2019s figures for Apple\u2019s R&D spending in FY 2025 and FY 2024 exactly match the context sources. The calculated increase of $3.18 billion is also consistent with the provided numbers, and the ~10.1% year-over-year growth is a correct rounding of that difference.",
+            "grounding_passed": true,
+            "citations": 4,
+            "has_citations": true,
+            "numbers_total": 3,
+            "numbers_verified": 3,
+            "pipeline_tokens": 5231,
+            "judge_tokens": 1355
+          },
+          {
+            "capability": "Debt situation",
+            "question": "What is Apple's total debt and how much is long-term?",
+            "answer": "Apple\u2019s total debt is $112.38 billion[1], and long-term debt is $78.33 billion[1].\n\n\n---\n### Citations\n- [1] FMP \u2014 AAPL Balance Sheet (2025-09-27), Balance Sheet - FY 2025",
+            "grounding_score": 5,
+            "grounding_reasoning": "The answer exactly matches the FY 2025 balance sheet in the context: Total Debt is listed as $112.38 billion and Long-Term Debt as $78.33 billion. Both figures are directly supported by Source 1, with no unsupported claims.",
+            "grounding_passed": true,
+            "citations": 3,
+            "has_citations": true,
+            "numbers_total": 2,
+            "numbers_verified": 2,
+            "pipeline_tokens": 4909,
+            "judge_tokens": 1000
+          }
+        ]
+      },
+      "accuracy": {
+        "citations_present": 10,
+        "numbers_verified": 46,
+        "numbers_total": 52,
+        "total": 10
+      }
+    },
+    "cost": {
+      "pipeline_tokens": 129101,
+      "judge_tokens": 23138,
+      "total_tokens": 152239
+    }
+  },
+  "smoke_test": {
+    "tickers": [
+      "MSFT"
+    ],
+    "ticker_results": {
+      "MSFT": {
+        "passed": 3,
+        "total": 3,
+        "details": [
+          {
+            "capability": "Revenue",
+            "question": "What are MSFT's revenue trends over the past two years?",
+            "citations": 6,
+            "source_count": 0,
+            "thin_context": true,
+            "passed": true,
+            "tokens": 4812
+          },
+          {
+            "capability": "Risks",
+            "question": "What are the biggest risks to MSFT's business?",
+            "citations": 23,
+            "source_count": 6,
+            "thin_context": false,
+            "passed": true,
+            "tokens": 12120
+          },
+          {
+            "capability": "News",
+            "question": "What is the latest news about MSFT?",
+            "citations": 4,
+            "source_count": 0,
+            "thin_context": true,
+            "passed": true,
+            "tokens": 5114
+          }
+        ]
+      }
+    },
+    "boundary_refusals": {
+      "passed": 6,
+      "total": 6,
+      "details": [
+        {
+          "name": "Private company",
+          "question": "What is Stripe's revenue?",
+          "answer": "Stripe\u2019s revenue is not available.",
+          "has_dollar_amounts": false,
+          "has_refusal": true,
+          "refusal_reasoning": "The answer explicitly states the requested revenue information is not available.",
+          "passed": true,
+          "tokens": 4335
+        },
+        {
+          "name": "Unknown company",
+          "question": "What is Cred's financial performance?",
+          "answer": "Financial performance is not available for Cred from the data I could retrieve.",
+          "has_dollar_amounts": false,
+          "has_refusal": true,
+          "refusal_reasoning": "The analyst explicitly states that the financial performance information is not available from the data they could retrieve.",
+          "passed": true,
+          "tokens": 6723
+        },
+        {
+          "name": "Speculative",
+          "question": "What will Apple's stock price be next month?",
+          "answer": "I can\u2019t predict Apple\u2019s stock price next month.",
+          "has_dollar_amounts": false,
+          "has_refusal": true,
+          "refusal_reasoning": "The analyst explicitly declines to predict Apple\u2019s stock price.",
+          "passed": true,
+          "tokens": 4302
+        },
+        {
+          "name": "Old data",
+          "question": "What was Apple's revenue in 2015?",
+          "answer": "Apple\u2019s 2015 revenue is not available from the returned data.",
+          "has_dollar_amounts": false,
+          "has_refusal": true,
+          "refusal_reasoning": "The answer explicitly states that Apple\u2019s 2015 revenue is not available from the returned data.",
+          "passed": true,
+          "tokens": 6715
+        },
+        {
+          "name": "Long trend",
+          "question": "Show me Amazon's 5-year revenue trend.",
+          "answer": "Amazon\u2019s 5-year revenue trend is not available from the data returned.",
+          "has_dollar_amounts": false,
+          "has_refusal": true,
+          "refusal_reasoning": "The answer explicitly states the requested 5-year revenue trend information is not available from the provided data.",
+          "passed": true,
+          "tokens": 6719
+        },
+        {
+          "name": "Out of window",
+          "question": "Compare Tesla's 2018 and 2019 earnings.",
+          "answer": "I couldn\u2019t retrieve Tesla\u2019s 2018 and 2019 earnings data from the available sources.",
+          "has_dollar_amounts": false,
+          "has_refusal": true,
+          "refusal_reasoning": "The analyst explicitly states they could not retrieve the requested earnings data from available sources.",
+          "passed": true,
+          "tokens": 6748
+        }
+      ]
+    },
+    "cost": {
+      "total_tokens": 58714
+    }
+  }
+}

@@ -107,8 +107,10 @@ def _show_answer(result: dict):
 def _load_company(ticker: str) -> bool:
     ticker = ticker.upper()
     raw_dir = RAW_DATA_DIR / ticker
+    sec_dir = raw_dir / "sec"
+    has_sec_files = sec_dir.exists() and any(sec_dir.glob("*.txt"))
 
-    if raw_dir.exists():
+    if raw_dir.exists() and has_sec_files:
         console.print(f"  [dim]{ticker} data already cached, skipping download.[/dim]")
     else:
         console.print(f"  [cyan]Fetching data for {ticker}...[/cyan]")
@@ -119,19 +121,17 @@ def _load_company(ticker: str) -> bool:
         summary = result.get("summary", {})
         errors = summary.get("errors", [])
 
-        if not summary.get("sec_filings") and not summary.get("fmp_datasets"):
+        if not summary.get("sec_filings"):
             console.print(f"  [red]Could not find data for {ticker}.[/red]")
             return False
 
         console.print(
             f"  [green]Got it:[/green] "
-            f"{summary.get('sec_filings', 0)} SEC filings, "
-            f"{summary.get('fmp_datasets', 0)} financial datasets, "
-            f"{summary.get('news_articles', 0)} news articles "
+            f"{summary.get('sec_filings', 0)} SEC filings "
             f"[dim]({elapsed:.1f}s)[/dim]"
         )
 
-    console.print(f"  [cyan]Indexing {ticker}...[/cyan]")
+    console.print(f"  [cyan]Indexing SEC filings for {ticker}...[/cyan]")
     start = time.time()
     stats = process_company(ticker)
     elapsed = time.time() - start

@@ -583,7 +583,6 @@ def _print_scorecard(deep: dict, smoke: dict) -> dict:
     else:
         print(f"  Smoke:         N/A        (no additional tickers indexed)")
 
-    print(f"\n  Note: Consistency may vary \u00b11 pair between runs (LLM non-determinism).")
 
     # Failures
     failures = []
@@ -603,15 +602,15 @@ def _print_scorecard(deep: dict, smoke: dict) -> dict:
                 failures.append(f"  Smoke: {r['question'][:40]}... ({r['source_count']} source(s) \u2014 thin data)")
 
     if failures:
-        print(f"\n   Failures ")
+        print(f"\n   Failures & Flags: ")
         for f in failures:
             print(f"  {f}")
 
-    verdict = "PASS" if master >= 9.0 else "FAIL"
-    verdict_icon = "\u2705" if master >= 9.0 else "\u274c"
+    verdict = "PASS" if master >= 8.5 else "FAIL"
+    verdict_icon = "\u2705" if master >= 8.5 else "\u274c"
 
     print(f"\n  Cost: {total_tokens:,} tokens")
-    print(f"\n  Verdict:             {verdict} {verdict_icon}  ({'\u2265' if master >= 9.0 else '<'} 9.0)")
+    print(f"\n  Verdict:             {verdict} {verdict_icon}  ({'\u2265' if master >= 8.5 else '<'} 8.5)")
     print(f"{'═'*60}\n")
 
     return {

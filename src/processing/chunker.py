@@ -5,14 +5,20 @@ from langchain_text_splitters import RecursiveCharacterTextSplitter
 
 logger = logging.getLogger(__name__)
 
-# 10-K section patterns — ordered by appearance in filings
-_10K_SECTIONS = [
+# SEC filing section patterns — ordered by appearance in filings
+# These patterns work for both 10-K and 10-Q (which share Item numbering)
+_SEC_SECTIONS = [
+    # Common to 10-K and 10-Q
     (r"(?i)\bItem\s+1A[\.\s\-\—]+Risk\s+Factors", "Item 1A - Risk Factors"),
     (r"(?i)\bItem\s+1B", "Item 1B - Unresolved Staff Comments"),
     (r"(?i)\bItem\s+1C", "Item 1C - Cybersecurity"),
     (r"(?i)\bItem\s+1[\.\s\-\—]+Business", "Item 1 - Business"),
+    (r"(?i)\bItem\s+1[\.\s\-\—]+Financial\s+Statements", "Item 1 - Financial Statements"),
     (r"(?i)\bItem\s+2[\.\s\-\—]+Propert", "Item 2 - Properties"),
+    (r"(?i)\bItem\s+2[\.\s\-\—]+Management", "Item 2 - MD&A"),
     (r"(?i)\bItem\s+3[\.\s\-\—]+Legal", "Item 3 - Legal Proceedings"),
+    (r"(?i)\bItem\s+3[\.\s\-\—]+Quantitative", "Item 3 - Market Risk Disclosures"),
+    (r"(?i)\bItem\s+4[\.\s\-\—]+Controls", "Item 4 - Controls and Procedures"),
     (r"(?i)\bItem\s+5", "Item 5 - Market for Common Equity"),
     (r"(?i)\bItem\s+7A", "Item 7A - Market Risk Disclosures"),
     (r"(?i)\bItem\s+7[\.\s\-\—]+Management", "Item 7 - MD&A"),
@@ -25,6 +31,14 @@ _10K_SECTIONS = [
     (r"(?i)\bItem\s+13", "Item 13 - Certain Relationships"),
     (r"(?i)\bItem\s+14", "Item 14 - Principal Accountant Fees"),
     (r"(?i)\bItem\s+15", "Item 15 - Exhibits"),
+    # 10-Q Part headers
+    (r"(?i)\bPart\s+I[\.\s\-\—]+Financial\s+Information", "Part I - Financial Information"),
+    (r"(?i)\bPart\s+II[\.\s\-\—]+Other\s+Information", "Part II - Other Information"),
+    # Fallback content patterns
+    (r"(?i)\bManagement.s\s+Discussion\s+and\s+Analysis", "MD&A"),
+    (r"(?i)\bRisk\s+Factors", "Risk Factors"),
+    (r"(?i)\bFinancial\s+Statements", "Financial Statements"),
+    (r"(?i)\bNotes\s+to\s+(Consolidated\s+)?Financial\s+Statements", "Notes to Financial Statements"),
 ]
 
 
@@ -34,7 +48,7 @@ def _detect_section(text: str, position: int, full_text: str) -> str:
     best_section = "Preamble"
     best_pos = -1
 
-    for pattern, section_name in _10K_SECTIONS:
+    for pattern, section_name in _SEC_SECTIONS:
         for match in re.finditer(pattern, preceding):
             if match.start() > best_pos:
                 best_pos = match.start()
@@ -55,8 +69,6 @@ def chunk_sec_filing(
     text: str,
     metadata: dict,
 ) -> list[dict]:
-    is_10k = metadata.get("document_type") == "10-K"
-
     # Small docs (8-K <4KB) stay whole
     if len(text) < 4000:
         section = "Earnings Press Release" if metadata.get("document_type") == "8-K" else "Full Document"
@@ -75,11 +87,7 @@ def chunk_sec_filing(
             pos = search_start
 
         chunk_metadata = {**metadata, "chunk_index": i}
-
-        if is_10k:
-            chunk_metadata["section"] = _detect_section(chunk_text, pos, text)
-        else:
-            chunk_metadata["section"] = f"Part {i + 1}"
+        chunk_metadata["section"] = _detect_section(chunk_text, pos, text)
 
         results.append({"text": chunk_text, "metadata": chunk_metadata})
         search_start = max(search_start, pos + 1)
@@ -91,44 +99,3 @@ def chunk_sec_filing(
     return results
 
 
-def chunk_news_articles(articles: list[dict], ticker: str, company_name: str) -> list[dict]:
-    results = []
-    for i, article in enumerate(articles):
-        parts = []
-        title = article.get("title", "")
-        if title:
-            parts.append(title)
-        desc = article.get("description", "")
-        if desc:
-            parts.append(desc)
-        content = article.get("content", "")
-        if content:
-            # Strip NewsAPI truncation suffix
-            content = re.sub(r"\[\+\d+ chars\]$", "", content).strip()
-            if content:
-                parts.append(content)
-
-        text = "\n\n".join(parts)
-        if not text.strip():
-            continue
-
-        source_name = article.get("source", {}).get("name", "Unknown")
-        pub_date = article.get("publishedAt", "")[:10]  # YYYY-MM-DD
-
-        results.append({
-            "text": text,
-            "metadata": {
-                "ticker": ticker,
-                "company_name": company_name,
-                "source_type": "news",
-                "document_type": "news_article",
-                "date": pub_date,
-                "section": f"News - {source_name}",
-                "source_name": source_name,
-                "url": article.get("url", ""),
-                "chunk_index": i,
-            },
-        })
-
-    logger.info(f"Processed {len(results)} news articles for {ticker}")
-    return results

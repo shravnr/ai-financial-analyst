@@ -13,8 +13,6 @@ NEWS_API_KEY = os.getenv("NEWS_API_KEY", "")
 # SEC EDGAR
 SEC_EDGAR_USER_AGENT = os.getenv("SEC_EDGAR_USER_AGENT", "YourName your@email.com")
 SEC_BASE_URL = "https://data.sec.gov"
-SEC_EFTS_URL = "https://efts.sec.gov/LATEST"
-SEC_ARCHIVES_URL = "https://www.sec.gov/Archives/edgar/data"
 SEC_RATE_LIMIT_DELAY = 0.12  # 10 requests/sec max → 100ms + margin
 
 # FMP
@@ -31,7 +29,6 @@ CHROMA_DIR = DATA_DIR / "chroma"
 
 # Ingestion defaults
 FILING_YEARS_BACK = 2
-NEWS_DAYS_BACK = 30            
 
 # Models
 LLM_MODEL = "gpt-5.4-mini"

@@ -1,5 +1,6 @@
 import json
 import logging
+import time
 from pathlib import Path
 
 import requests
@@ -9,8 +10,16 @@ from src.config import FMP_API_KEY, FMP_BASE_URL, RAW_DATA_DIR
 logger = logging.getLogger(__name__)
 
 
+_FMP_MAX_RETRIES = 2
+_FMP_RETRY_DELAY = 1.5  # seconds
 
-def _fmp_get(endpoint: str, params: dict | None = None) -> list | dict | None:
+# Sentinels to distinguish error types from "no data"
+FMP_RATE_LIMITED = "FMP_RATE_LIMITED"
+FMP_PAYMENT_REQUIRED = "FMP_PAYMENT_REQUIRED"
+
+
+def _fmp_get(endpoint: str, params: dict | None = None) -> list | dict | str | None:
+    # Returns data on success, None on empty/error, FMP_RATE_LIMITED on 429, FMP_PAYMENT_REQUIRED on 402
     if not FMP_API_KEY:
         logger.error("FMP_API_KEY not set")
         return None
@@ -19,20 +28,43 @@ def _fmp_get(endpoint: str, params: dict | None = None) -> list | dict | None:
     params["apikey"] = FMP_API_KEY
     url = f"{FMP_BASE_URL}/{endpoint}"
 
-    try:
-        resp = requests.get(url, params=params, timeout=20)
-        resp.raise_for_status()
-        data = resp.json()
+    for attempt in range(_FMP_MAX_RETRIES + 1):
+        try:
+            resp = requests.get(url, params=params, timeout=20)
 
-        if isinstance(data, dict) and ("Error Message" in data or "error" in data):
-            msg = data.get("Error Message") or data.get("error", "Unknown error")
-            logger.warning(f"FMP error for {endpoint}: {msg}")
+            if resp.status_code == 429:
+                if attempt < _FMP_MAX_RETRIES:
+                    delay = _FMP_RETRY_DELAY * (attempt + 1)
+                    logger.info(f"FMP rate limited on {endpoint}, retrying in {delay}s")
+                    time.sleep(delay)
+                    continue
+                else:
+                    logger.warning(f"FMP rate limited on {endpoint}, retries exhausted")
+                    return FMP_RATE_LIMITED
+
+            if resp.status_code == 402:
+                logger.info(f"FMP endpoint {endpoint} not available on current plan for {params.get('symbol', '?')}")
+                return FMP_PAYMENT_REQUIRED
+
+            resp.raise_for_status()
+            data = resp.json()
+
+            if isinstance(data, dict) and ("Error Message" in data or "error" in data):
+                msg = data.get("Error Message") or data.get("error", "Unknown error")
+                logger.warning(f"FMP error for {endpoint}: {msg}")
+                return None
+
+            return data
+        except requests.RequestException as e:
+            if attempt < _FMP_MAX_RETRIES and "429" in str(e):
+                delay = _FMP_RETRY_DELAY * (attempt + 1)
+                logger.info(f"FMP rate limited on {endpoint}, retrying in {delay}s")
+                time.sleep(delay)
+                continue
+            logger.warning(f"FMP request failed for {endpoint}: {e}")
             return None
 
-        return data
-    except requests.RequestException as e:
-        logger.warning(f"FMP request failed for {endpoint}: {e}")
-        return None
+    return None
 
 
 def _save_json(data, ticker: str, filename: str) -> str | None:
@@ -57,52 +89,10 @@ def _fetch_profile(ticker: str) -> dict | None:
     return None
 
 
-def _fetch_financial_statements(ticker: str) -> dict:
-    results = {}
-
-    endpoints = {
-        "income_statement_annual": ("income-statement", {"symbol": ticker, "period": "annual", "limit": 2}),
-        "balance_sheet_annual": ("balance-sheet-statement", {"symbol": ticker, "period": "annual", "limit": 2}),
-        "cash_flow_annual": ("cash-flow-statement", {"symbol": ticker, "period": "annual", "limit": 2}),
-    }
-
-    for name, (endpoint, params) in endpoints.items():
-        data = _fmp_get(endpoint, params)
-        results[name] = data
-        if data:
-            logger.info(f"Fetched {name}: {len(data)} records")
-        else:
-            logger.warning(f"No data for {name}")
-
-    return results
-
-
-def _fetch_metrics_and_ratios(ticker: str) -> dict:
-    results = {}
-
-    endpoints = {
-        "key_metrics": ("key-metrics", {"symbol": ticker, "period": "annual", "limit": 2}),
-        "ratios": ("ratios", {"symbol": ticker, "period": "annual", "limit": 2}),
-        "grades": ("grades", {"symbol": ticker, "limit": 20}),
-        "analyst_estimates": ("analyst-estimates", {"symbol": ticker, "period": "annual", "limit": 4}),
-    }
-
-    for name, (endpoint, params) in endpoints.items():
-        data = _fmp_get(endpoint, params)
-        results[name] = data
-        if data:
-            count = len(data) if isinstance(data, list) else 1
-            logger.info(f"Fetched {name}: {count} records")
-        else:
-            logger.warning(f"No data for {name}")
-
-    return results
-
-
-
-def fetch_fmp_data(ticker: str) -> dict:
+def fetch_fmp_profile(ticker: str) -> dict:
+    """Fetch and save only the company profile (for company name during SEC ingestion)."""
     ticker = ticker.upper()
-    result = {"company_name": "", "profile": None, "files": {}, "errors": []}
+    result = {"company_name": "", "errors": []}
 
     profile = _fetch_profile(ticker)
     if not profile:
@@ -110,25 +100,7 @@ def fetch_fmp_data(ticker: str) -> dict:
         return result
 
     result["company_name"] = profile.get("companyName", "")
-    result["profile"] = profile
-    path = _save_json([profile], ticker, "profile.json")
-    if path:
-        result["files"]["profile"] = path
-
-    statements = _fetch_financial_statements(ticker)
-    for name, data in statements.items():
-        path = _save_json(data, ticker, f"{name}.json")
-        if path:
-            result["files"][name] = path
-        elif data is None:
-            result["errors"].append(f"Failed to fetch {name}")
-
-    metrics = _fetch_metrics_and_ratios(ticker)
-    for name, data in metrics.items():
-        path = _save_json(data, ticker, f"{name}.json")
-        if path:
-            result["files"][name] = path
-        elif data is None:
-            result["errors"].append(f"Failed to fetch {name}")
-
+    _save_json([profile], ticker, "profile.json")
     return result
+
+

@@ -1,8 +1,4 @@
-import json
 import logging
-from pathlib import Path
-
-from src.config import PROJECT_ROOT
 
 logger = logging.getLogger(__name__)
 
@@ -89,31 +85,47 @@ Description: {record.get('description', 'N/A')}"""
     }]
 
 
+def _compute_ratio(numerator, denominator):
+    """Compute ratio from raw values when pre-computed ratio is missing."""
+    if numerator is None or denominator is None:
+        return None
+    try:
+        num, den = float(numerator), float(denominator)
+        if den == 0:
+            return None
+        return num / den
+    except (ValueError, TypeError):
+        return None
+
+
 def _format_income_statement(records: list[dict], ticker: str, period: str) -> list[dict]:
     results = []
     for i, r in enumerate(records or []):
         date = r.get("date", r.get("fillingDate", "Unknown"))
         fiscal_year = r.get("fiscalYear") or r.get("calendarYear") or ""
-        period_label = r.get("period", period)
+
+        gross_margin = r.get('grossProfitRatio') or _compute_ratio(r.get('grossProfit'), r.get('revenue'))
+        operating_margin = r.get('operatingIncomeRatio') or _compute_ratio(r.get('operatingIncome'), r.get('revenue'))
+        net_margin = r.get('netIncomeRatio') or _compute_ratio(r.get('netIncome'), r.get('revenue'))
 
         text = f"""{ticker} — Income Statement (FY {fiscal_year}, ending {date})
 
 Revenue: {_fmt_currency(r.get('revenue'))}
 Cost of Revenue: {_fmt_currency(r.get('costOfRevenue'))}
 Gross Profit: {_fmt_currency(r.get('grossProfit'))}
-Gross Margin: {_fmt_pct(r.get('grossProfitRatio'))}
+Gross Margin: {_fmt_pct(gross_margin)}
 
 Operating Expenses: {_fmt_currency(r.get('operatingExpenses'))}
 Research & Development: {_fmt_currency(r.get('researchAndDevelopmentExpenses'))}
 Selling, General & Admin: {_fmt_currency(r.get('sellingGeneralAndAdministrativeExpenses'))}
 Operating Income: {_fmt_currency(r.get('operatingIncome'))}
-Operating Margin: {_fmt_pct(r.get('operatingIncomeRatio'))}
+Operating Margin: {_fmt_pct(operating_margin)}
 
 Interest Expense: {_fmt_currency(r.get('interestExpense'))}
 Income Before Tax: {_fmt_currency(r.get('incomeBeforeTax'))}
 Income Tax Expense: {_fmt_currency(r.get('incomeTaxExpense'))}
 Net Income: {_fmt_currency(r.get('netIncome'))}
-Net Margin: {_fmt_pct(r.get('netIncomeRatio'))}
+Net Margin: {_fmt_pct(net_margin)}
 
 EPS (Basic): ${_fmt_number(r.get('eps'))}
 EPS (Diluted): ${_fmt_number(r.get('epsdiluted'))}
@@ -140,8 +152,6 @@ def _format_balance_sheet(records: list[dict], ticker: str, period: str) -> list
     for i, r in enumerate(records or []):
         date = r.get("date", "Unknown")
         fiscal_year = r.get("fiscalYear") or r.get("calendarYear") or ""
-        period_label = r.get("period", period)
-
         text = f"""{ticker} — Balance Sheet (FY {fiscal_year}, ending {date})
 
 ASSETS
@@ -193,8 +203,6 @@ def _format_cash_flow(records: list[dict], ticker: str, period: str) -> list[dic
     for i, r in enumerate(records or []):
         date = r.get("date", "Unknown")
         fiscal_year = r.get("fiscalYear") or r.get("calendarYear") or ""
-        period_label = r.get("period", period)
-
         text = f"""{ticker} — Cash Flow Statement (FY {fiscal_year}, ending {date})
 
 OPERATING ACTIVITIES
@@ -369,51 +377,3 @@ Number of Analysts: {_fmt_number(r.get('numberAnalystsEstimatedRevenue'))}"""
     return results
 
 
-def format_fmp_data(ticker: str, raw_dir: Path) -> list[dict]:
-    fmp_dir = raw_dir / "fmp"
-    if not fmp_dir.exists():
-        logger.warning(f"No FMP data directory found for {ticker}")
-        return []
-
-    all_docs = []
-
-    company_name = ticker
-    profile_path = fmp_dir / "profile.json"
-    if profile_path.exists():
-        try:
-            with open(profile_path) as pf:
-                pd = json.load(pf)
-                company_name = (pd[0] if isinstance(pd, list) else pd).get("companyName", ticker)
-        except Exception:
-            pass
-
-    formatters = {
-        "profile.json": lambda d: _format_profile(d, ticker),
-        "income_statement_annual.json": lambda d: _format_income_statement(d, ticker, "annual"),
-        "balance_sheet_annual.json": lambda d: _format_balance_sheet(d, ticker, "annual"),
-        "cash_flow_annual.json": lambda d: _format_cash_flow(d, ticker, "annual"),
-        "key_metrics.json": lambda d: _format_key_metrics(d, ticker),
-        "grades.json": lambda d: _format_grades(d, ticker),
-        "analyst_estimates.json": lambda d: _format_analyst_estimates(d, ticker),
-    }
-
-    for filename, formatter in formatters.items():
-        filepath = fmp_dir / filename
-        if not filepath.exists():
-            continue
-
-        try:
-            with open(filepath, "r", encoding="utf-8") as f:
-                data = json.load(f)
-            docs = formatter(data)
-            rel_path = str(filepath.relative_to(PROJECT_ROOT))
-            for doc in docs:
-                doc["metadata"]["file_path"] = rel_path
-                if "company_name" not in doc["metadata"]:
-                    doc["metadata"]["company_name"] = company_name
-            all_docs.extend(docs)
-        except Exception as e:
-            logger.warning(f"Failed to format {filename} for {ticker}: {e}")
-
-    logger.info(f"Formatted {len(all_docs)} structured documents for {ticker}")
-    return all_docs

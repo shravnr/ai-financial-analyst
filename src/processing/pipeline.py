@@ -3,8 +3,7 @@ import logging
 from pathlib import Path
 
 from src.config import RAW_DATA_DIR, PROJECT_ROOT
-from src.processing.chunker import chunk_sec_filing, chunk_news_articles
-from src.processing.structured_formatter import format_fmp_data
+from src.processing.chunker import chunk_sec_filing
 from src.processing.vector_store import add_documents, delete_company
 
 logger = logging.getLogger(__name__)
@@ -65,20 +64,6 @@ def _process_sec_filings(ticker: str, company_name: str, raw_dir: Path) -> list[
     return all_chunks
 
 
-def _process_news(ticker: str, company_name: str, raw_dir: Path) -> list[dict]:
-    news_file = raw_dir / "news" / "articles.json"
-    if not news_file.exists():
-        logger.warning(f"No news data for {ticker}")
-        return []
-
-    with open(news_file, "r", encoding="utf-8") as f:
-        articles = json.load(f)
-
-    chunks = chunk_news_articles(articles, ticker, company_name)
-    logger.info(f"News for {ticker}: {len(chunks)} article chunks")
-    return chunks
-
-
 def process_company(ticker: str, reprocess: bool = False) -> dict:
     ticker = ticker.upper()
     raw_dir = RAW_DATA_DIR / ticker
@@ -87,7 +72,7 @@ def process_company(ticker: str, reprocess: bool = False) -> dict:
         return {
             "ticker": ticker,
             "error": f"No raw data found for {ticker}. Run ingestion first.",
-            "chunks": {"sec": 0, "fmp": 0, "news": 0, "total": 0},
+            "chunks": {"sec": 0, "total": 0},
         }
 
     company_name = _load_company_name(ticker, raw_dir)
@@ -98,13 +83,9 @@ def process_company(ticker: str, reprocess: bool = False) -> dict:
         logger.info(f"Deleted {deleted} existing documents for {ticker}")
 
     sec_chunks = _process_sec_filings(ticker, company_name, raw_dir)
-    fmp_chunks = format_fmp_data(ticker, raw_dir)
-    news_chunks = _process_news(ticker, company_name, raw_dir)
 
-    all_chunks = sec_chunks + fmp_chunks + news_chunks
-
-    if all_chunks:
-        added = add_documents(all_chunks)
+    if sec_chunks:
+        added = add_documents(sec_chunks)
     else:
         added = 0
 
@@ -113,17 +94,13 @@ def process_company(ticker: str, reprocess: bool = False) -> dict:
         "company_name": company_name,
         "chunks": {
             "sec": len(sec_chunks),
-            "fmp": len(fmp_chunks),
-            "news": len(news_chunks),
-            "total": len(all_chunks),
+            "total": len(sec_chunks),
         },
         "embedded": added,
     }
 
     logger.info(
-        f"Processed {ticker}: {stats['chunks']['sec']} SEC chunks, "
-        f"{stats['chunks']['fmp']} FMP docs, "
-        f"{stats['chunks']['news']} news chunks — "
+        f"Processed {ticker}: {stats['chunks']['sec']} SEC chunks — "
         f"{added} total embedded"
     )
 

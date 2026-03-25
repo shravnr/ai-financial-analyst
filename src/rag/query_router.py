@@ -13,51 +13,48 @@ _client = OpenAI(api_key=OPENAI_API_KEY)
 # Regex fast path — keyword patterns to source preferences
 _PATTERNS: list[tuple[str, list[str], int]] = [
     (r"(?i)(revenue|profit|income|earnings|eps|margin|ebitda)\b.*\b(number|figure|exact|how much|what)",
-     ["fmp", "sec"], 12),
+     ["sec"], 12),
 
     (r"(?i)(latest|recent|news|today|this week|this month|announce|event)",
-     ["news", "sec"], 12),
+     ["sec"], 12),
 
     (r"(?i)(risk|threat|challenge|headwind|concern|uncertainty|litigation|lawsuit)",
      ["sec"], 12),
 
     (r"(?i)(guidance|outlook|forecast|forward|strategy|plan|initiative|management said|going forward)",
-     ["sec", "fmp"], 12),
+     ["sec"], 12),
 
     (r"(?i)(debt|leverage|liabilit|borrow|loan|credit|bond|cash position|cash flow|liquidity|balance sheet)",
-     ["fmp", "sec"], 12),
+     ["sec"], 12),
 
     (r"(?i)(valuation|overvalued|undervalued|p\/e|pe ratio|price.to|ev\/|enterprise value|fair value)",
-     ["fmp"], 10),
+     ["sec"], 10),
 
     (r"(?i)(analyst|rating|upgrade|downgrade|buy|sell|hold|target price|consensus|estimate)",
-     ["fmp"], 10),
+     ["sec"], 10),
 
     (r"(?i)(competitor|compar|versus|vs\.?|peer|rival|industry|sector)",
-     None, 12),  # None = all sources
+     ["sec"], 12),
 
     (r"(?i)(segment|division|business line|revenue driver|breakdown|geographic|product mix)",
-     ["sec", "fmp"], 12),
+     ["sec"], 12),
 
     (r"(?i)(earnings call|earnings report|quarterly result|quarter result|conference call)",
-     ["sec", "fmp"], 12),
+     ["sec"], 12),
 ]
 
 # LLM fallback for queries that don't match regex
 
-_LLM_ROUTER_SYSTEM = """You are a financial question classifier. Given a user's question about a company, determine which data sources to search.
+_LLM_ROUTER_SYSTEM = """You are a financial question classifier. Given a user's question about a company, determine how many SEC filing chunks to retrieve.
 
-Available sources:
-- "sec": SEC filings (10-K annual reports, 10-Q quarterly reports, 8-K earnings press releases). Best for: risks, strategy, business segments, legal matters, management discussion, qualitative analysis.
-- "fmp": Financial Modeling Prep structured data (income statements, balance sheets, cash flow, key metrics, ratios, analyst grades, estimates). Best for: specific numbers, ratios, valuation, analyst ratings, financial trends.
-- "news": Recent news articles. Best for: latest developments, current events, market sentiment.
+The vector store contains only SEC filings (10-K annual reports, 10-Q quarterly reports, 8-K earnings press releases). These cover: risks, strategy, business segments, legal matters, management discussion, financial statements, qualitative analysis.
 
 Return JSON with:
-- "source_types": list of 1-3 source strings, or null to search all sources
+- "source_types": ["sec"]
 - "n_results": number of chunks to retrieve (8-15, use 12 for broad questions, 8-10 for focused ones)
 - "reasoning": one sentence explaining your choice
 
-Example: {"source_types": ["fmp", "sec"], "n_results": 12, "reasoning": "Revenue comparison needs financial statements from FMP and SEC filings for context."}"""
+Example: {"source_types": ["sec"], "n_results": 12, "reasoning": "Revenue comparison needs multiple filing periods for context."}"""
 
 
 def _llm_classify(question: str) -> dict:

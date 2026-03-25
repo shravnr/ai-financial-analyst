@@ -1,0 +1,342 @@
+{
+  "timestamp": "2026-03-25T11:55:13.584317",
+  "master_score": 9.7,
+  "verdict": "PASS",
+  "sub_scores": {
+    "llm_judge": 9.3,
+    "rule_based": 10.0,
+    "consistency": 9.0,
+    "grounding": 9.0,
+    "boundary": 10.0,
+    "verification": 10.0,
+    "smoke": 10.0
+  },
+  "deep_eval": {
+    "ticker": "AMZN",
+    "signals": {
+      "consistency": {
+        "passed": 4,
+        "total": 4,
+        "avg_score": 4.5,
+        "details": [
+          {
+            "name": "Revenue",
+            "question_a": "What are Amazon's revenue and profit trends over the past two years?",
+            "question_b": "How much revenue and net income has Amazon generated recently?",
+            "answer_a": "Amazon\u2019s revenue rose to $716.92 billion[1] in FY 2025 from $637.96 billion[2] in FY 2024, an increase of about 12.4%.\n\nProfit also improved across the board:\n- Operating income increased to $79.97 billion[1] from $68.59 billion[2], up about 16.6%.\n- Net income increased to $77.67 billion[1] from $59.25 billion[2], up about 31.1%.\n- Operating margin expanded to 11.16%[1] from 10.75%[2].\n- Net margin expanded to 10.83%[1] from 9.29%[2].\n\nGross profit also increased to $360.51 billion[1] from $311.67 billion[2], with gross margin rising to 50.29%[1] from 48.85%[2].\n\n\n---\n### Citations\n- [1] FMP \u2014 AMZN Income Statement (2025-12-31), Income Statement - FY 2025\n- [2] FMP \u2014 AMZN Income Statement (2024-12-31), Income Statement - FY 2024",
+            "answer_b": "Amazon generated $716.92 billion in revenue and $77.67 billion in net income in FY 2025[1]. In FY 2024, it generated $637.96 billion in revenue and $59.25 billion in net income[2].\n\n\n---\n### Citations\n- [1] FMP \u2014 AMZN Income Statement (2025-12-31), Income Statement - FY 2025\n- [2] FMP \u2014 AMZN Income Statement (2024-12-31), Income Statement - FY 2024",
+            "score": 5,
+            "reasoning": "Both answers report the same FY 2025 and FY 2024 revenue and net income figures for Amazon. Answer A adds broader profitability metrics and trend interpretation, but its shared facts exactly match Answer B.",
+            "passed": true,
+            "pipeline_tokens": 9708,
+            "judge_tokens": 701
+          },
+          {
+            "name": "Risks",
+            "question_a": "What are the biggest risks to Amazon's business according to their 10-K?",
+            "question_b": "What risk factors does Amazon disclose in SEC filings?",
+            "answer_a": "Amazon\u2019s 10-K highlights these biggest business risks:\n\n- **Intense competition** across retail, e-commerce services, cloud, devices, digital content, advertising, grocery, healthcare, communications, and logistics; competitors may have more resources, better pricing power, and greater brand recognition[1].\n- **Evolving regulation and legal scrutiny** in areas like privacy, data security, consumer protection, competition, trade, AI, and environmental rules; Amazon also says it faces open investigations involving its stores, fulfillment network, Prime, acquisitions, and aspects of AWS cloud services[2].\n- **Macroeconomic and geopolitical pressure**, including foreign exchange rates, energy prices, tariffs and trade policies, inflation, interest rates, labor constraints, customer demand, and world events[3].\n- **Operational execution risk** tied to fulfillment, sortation, delivery, data center optimization, inventory management, and fulfillment throughput/productivity[3].\n- **Cybersecurity and data protection risk**; Amazon says it faces data loss or other security incidents and maintains cybersecurity controls and oversight because these risks remain material[4].\n\nIf you want, I can also rank these by how prominently they appear in the filing or pull the exact risk-factor language for each.\n\n\n---\n### Citations\n- [1] SEC \u2014 AMZN 10-K (2026-02-06), Financial Statements \u2192 https://www.sec.gov/Archives/edgar/data/1018724/000101872426000004/amzn-20251231.htm\n- [2] SEC \u2014 AMZN 10-Q (2024-05-01), Risk Factors \u2192 https://www.sec.gov/Archives/edgar/data/1018724/000101872424000083/amzn-20240331.htm\n- [3] SEC \u2014 AMZN 10-K (2026-02-06), Item 5 - Market for Common Equity \u2192 https://www.sec.gov/Archives/edgar/data/1018724/000101872426000004/amzn-20251231.htm\n- [4] SEC \u2014 AMZN 10-K (2025-02-07), Item 1C - Cybersecurity \u2192 https://www.sec.gov/Archives/edgar/data/1018724/000101872425000004/amzn-20241231.htm",
+            "answer_b": "Amazon discloses these main risk factors in its SEC filings:\n\n- **Competition and market pressure** across its businesses, including online commerce, cloud services, and new technologies[1][2]\n- **Regulatory and legal risk**, including evolving laws, investigations, enforcement actions, and compliance costs[3][4]\n- **Antitrust and consumer protection investigations**, including claims tied to its stores, fulfillment network, Prime, and AWS cloud services[3][4]\n- **Data privacy and data-use regulation risk**, with uncertainty from changing rules on collection, use, and disclosure of data[3][4]\n- **Cybersecurity and information-system risk**, including unauthorized access, data loss, theft, misuse, and third-party technology risks[5]\n- **Claims, litigation, government investigations, and other proceedings** that could materially affect results[1][2]\n- **Macroeconomic risk**, including foreign exchange rates, energy prices, inflation, interest rates, global economic conditions, and customer demand/spending[1][2][6]\n- **Supply chain and resource volatility**, including memory chips, inventory management, and broader resource constraints[1][2]\n- **Labor and operations risk**, including regional labor market constraints and fulfillment, sortation, delivery, and data center optimization challenges[1][2]\n- **International growth and geopolitical risk**, including global economic and geopolitical conditions and international expansion[1][2]\n- **Tax risk**, including the extent to which Amazon owes income or other taxes[1][2]\n- **Payments risk** and risks tied to commercial agreements, acquisitions, and strategic transactions[1][2]\n- **Government contract and procurement risk**, including audits, investigations, penalties, termination, and debarment risk on government contracts[5]\n\nAmazon also says its risk disclosures cover businesses such as **internet, e-commerce, digital content, web services, electronic devices, advertising, AI technologies and services, satellite communications services, and healthcare**[3][4].\n\n\n---\n### Citations\n- [1] SEC \u2014 AMZN 10-K (2026-02-06), Item 5 - Market for Common Equity \u2192 https://www.sec.gov/Archives/edgar/data/1018724/000101872426000004/amzn-20251231.htm\n- [2] SEC \u2014 AMZN 10-Q (2024-05-01), Financial Statements \u2192 https://www.sec.gov/Archives/edgar/data/1018724/000101872424000083/amzn-20240331.htm\n- [3] SEC \u2014 AMZN 10-Q (2025-10-31), Risk Factors \u2192 https://www.sec.gov/Archives/edgar/data/1018724/000101872425000123/amzn-20250930.htm\n- [4] SEC \u2014 AMZN 10-Q (2025-05-02), Risk Factors \u2192 https://www.sec.gov/Archives/edgar/data/1018724/000101872425000036/amzn-20250331.htm\n- [5] SEC \u2014 AMZN 10-K (2026-02-06), Risk Factors \u2192 https://www.sec.gov/Archives/edgar/data/1018724/000101872426000004/amzn-20251231.htm\n- [6] SEC \u2014 AMZN 10-Q (2024-08-02), Financial Statements \u2192 https://www.sec.gov/Archives/edgar/data/1018724/000101872424000130/amzn-20240630.htm",
+            "score": 4,
+            "reasoning": "Both answers identify the same broad categories of Amazon risk: competition, regulation/legal scrutiny, cybersecurity, macroeconomic pressure, and operational/labor challenges. Answer B adds several extra risk buckets (tax, payments, government contracts, etc.), but there is no direct conflict with Answer A\u2019s claims.",
+            "passed": true,
+            "pipeline_tokens": 24972,
+            "judge_tokens": 1546
+          },
+          {
+            "name": "Cash position",
+            "question_a": "What is Amazon's current cash position and is it generating or burning cash?",
+            "question_b": "How much cash does Amazon hold and what is its free cash flow?",
+            "answer_a": "Amazon has $123.03 billion[1] in cash and short-term investments, including $86.81 billion[1] of cash and equivalents.\n\nIt is generating cash: FY 2025 operating cash flow was $139.51 billion[2], and free cash flow was $7.70 billion[2] after $131.82 billion[2] of capital expenditures. Net change in cash was positive at $7.79 billion[2].\n\n\n---\n### Citations\n- [1] FMP \u2014 AMZN Balance Sheet (2025-12-31), Balance Sheet - FY 2025\n- [2] FMP \u2014 AMZN Cash Flow Statement (2025-12-31), Cash Flow Statement - FY 2025",
+            "answer_b": "Amazon holds $123.03 billion in cash and short-term investments[1]. Its free cash flow was $7.70 billion in FY 2025[2].\n\n\n---\n### Citations\n- [1] FMP \u2014 AMZN Balance Sheet (2025-12-31), Balance Sheet - FY 2025\n- [2] FMP \u2014 AMZN Cash Flow Statement (2025-12-31), Cash Flow Statement - FY 2025",
+            "score": 5,
+            "reasoning": "Both answers report the same cash position for Amazon: $123.03 billion in cash and short-term investments. They also agree that FY 2025 free cash flow was $7.70 billion, and Answer A\u2019s additional statement that Amazon is generating cash is consistent with that positive free cash flow.",
+            "passed": true,
+            "pipeline_tokens": 10819,
+            "judge_tokens": 607
+          },
+          {
+            "name": "News",
+            "question_a": "What is the latest news about Amazon?",
+            "question_b": "Are there any recent headlines or developments about Amazon?",
+            "answer_a": "The most recent items are dated 2026-03-24 and include discounted products such as Dove Men + Care body bars, a Klein Tools surge protector power strip, a Yes4All grip strengthener, a Four Candies pencil case, and Cottonelle toilet paper deals on Amazon[1][2][3][4][5].\n\n\n---\n### Citations\n- [1] NEWS \u2014 AMZN News Article (2026-03-24), News - Slickdeals.net \u2192 https://slickdeals.net/f/19339122-dove-men-care-body-and-face-bar-to-clean-and-hydrate-skin-body-and-facial-cleanser-more-moisturizing-than-bar-soap-3-75-oz-8-bars-10-97-after-coupon-amazon\n- [2] NEWS \u2014 AMZN News Article (2026-03-24), News - Slickdeals.net \u2192 https://slickdeals.net/f/19338312-5-klein-tools-magnetic-surge-protector-power-strip-5x-120v-ac-1x-usb-c-2x-usb-a-40-free-s-h\n- [3] NEWS \u2014 AMZN News Article (2026-03-24), News - Slickdeals.net \u2192 https://slickdeals.net/f/19339095-8-52-yes4all-wrist-and-forearm-fitness-grip-strengthener-w-steel-roller-at-amazon\n- [4] NEWS \u2014 AMZN News Article (2026-03-24), News - Slickdeals.net \u2192 https://slickdeals.net/f/19339086-four-candies-3-compartment-large-pencil-case-w-removable-handle-5-99-free-shipping-w-prime-or-on-35\n- [5] NEWS \u2014 AMZN News Article (2026-03-24), News - Slickdeals.net \u2192 https://slickdeals.net/f/19339083-sns-52-42-2-24-pack-353-sheets-cottonelle-toilet-paper-family-mega-rolls-26-21-each-15-credit-at-amazon",
+            "answer_b": "The latest results are mostly Amazon marketplace deal posts, not company-level business news: several Amazon listings were posted on March 24, 2026, including Dove Men + Care body soap, a Klein Tools power strip, a Yes4All grip strengthener, a Four Candies pencil case, and Cottonelle toilet paper deals[1][2][3][4][5].\n\nFrom Amazon\u2019s filings, the recurring developments and risks highlighted recently are continued investment in new business opportunities, cloud services, online commerce, fulfillment, delivery, and data center optimization, along with exposure to competition, litigation, government investigations, inventory management, and macro factors like inflation, interest rates, tariffs, trade policy, and customer demand[6][7][8][9][10].\n\n\n---\n### Citations\n- [1] NEWS \u2014 AMZN News Article (2026-03-24), News - Slickdeals.net \u2192 https://slickdeals.net/f/19339122-dove-men-care-body-and-face-bar-to-clean-and-hydrate-skin-body-and-facial-cleanser-more-moisturizing-than-bar-soap-3-75-oz-8-bars-10-97-after-coupon-amazon\n- [2] NEWS \u2014 AMZN News Article (2026-03-24), News - Slickdeals.net \u2192 https://slickdeals.net/f/19338312-5-klein-tools-magnetic-surge-protector-power-strip-5x-120v-ac-1x-usb-c-2x-usb-a-40-free-s-h\n- [3] NEWS \u2014 AMZN News Article (2026-03-24), News - Slickdeals.net \u2192 https://slickdeals.net/f/19339095-8-52-yes4all-wrist-and-forearm-fitness-grip-strengthener-w-steel-roller-at-amazon\n- [4] NEWS \u2014 AMZN News Article (2026-03-24), News - Slickdeals.net \u2192 https://slickdeals.net/f/19339086-four-candies-3-compartment-large-pencil-case-w-removable-handle-5-99-free-shipping-w-prime-or-on-35\n- [5] NEWS \u2014 AMZN News Article (2026-03-24), News - Slickdeals.net \u2192 https://slickdeals.net/f/19339083-sns-52-42-2-24-pack-353-sheets-cottonelle-toilet-paper-family-mega-rolls-26-21-each-15-credit-at-amazon\n- [6] SEC \u2014 AMZN 10-Q (2024-05-01), Financial Statements \u2192 https://www.sec.gov/Archives/edgar/data/1018724/000101872424000083/amzn-20240331.htm\n- [7] SEC \u2014 AMZN 10-Q (2024-11-01), Financial Statements \u2192 https://www.sec.gov/Archives/edgar/data/1018724/000101872424000161/amzn-20240930.htm\n- [8] SEC \u2014 AMZN 10-K (2026-02-06), Item 5 - Market for Common Equity \u2192 https://www.sec.gov/Archives/edgar/data/1018724/000101872426000004/amzn-20251231.htm\n- [9] SEC \u2014 AMZN 10-Q (2025-08-01), Financial Statements \u2192 https://www.sec.gov/Archives/edgar/data/1018724/000101872425000086/amzn-20250630.htm\n- [10] SEC \u2014 AMZN 10-Q (2025-05-02), Financial Statements \u2192 https://www.sec.gov/Archives/edgar/data/1018724/000101872425000036/amzn-20250331.htm",
+            "score": 4,
+            "reasoning": "Both answers agree that the latest Amazon-related items are March 24, 2026 deal/listing posts on Amazon, with the same examples such as Dove Men + Care, Klein Tools, Yes4All, Four Candies, and Cottonelle. Answer B adds broader filing-based business developments and risks, but it does not contradict Answer A\u2019s main point.",
+            "passed": true,
+            "pipeline_tokens": 21556,
+            "judge_tokens": 1594
+          }
+        ]
+      },
+      "grounding": {
+        "passed": 10,
+        "total": 10,
+        "avg_score": 4.5,
+        "well_grounded": 10,
+        "details": [
+          {
+            "capability": "Revenue trends",
+            "question": "What are Amazon's revenue and profit trends over the past two years?",
+            "answer": "Amazon\u2019s revenue rose to $716.92 billion[1] in FY 2025 from $637.96 billion[2] in FY 2024, an increase of 12.4%.\n\nProfit also improved across the board:\n- Operating income increased to $79.97 billion[1] from $68.59 billion[2], up 16.5%.\n- Net income increased to $77.67 billion[1] from $59.25 billion[2], up 31.1%.\n- Operating margin expanded to 11.16%[1] from 10.75%[2].\n- Net margin expanded to 10.83%[1] from 9.29%[2].\n\nGross profit also increased to $360.51 billion[1] from $311.67 billion[2], with gross margin rising to 50.29%[1] from 48.85%[2].\n\n\n---\n### Citations\n- [1] FMP \u2014 AMZN Income Statement (2025-12-31), Income Statement - FY 2025\n- [2] FMP \u2014 AMZN Income Statement (2024-12-31), Income Statement - FY 2024",
+            "grounding_score": 5,
+            "grounding_reasoning": "All of the answer\u2019s numerical claims are directly supported by the provided FY 2025 and FY 2024 income statements. The percentage changes and margin comparisons are straightforward calculations from those figures and are consistent with the source data.",
+            "grounding_passed": true,
+            "citations": 16,
+            "has_citations": true,
+            "numbers_total": 8,
+            "numbers_verified": 8,
+            "pipeline_tokens": 4925,
+            "judge_tokens": 1035
+          },
+          {
+            "capability": "Gross margin",
+            "question": "Has Amazon's gross margin improved or declined recently?",
+            "answer": "Amazon\u2019s gross margin improved recently, rising to 50.29%[1] in FY 2025 from 48.85%[2] in FY 2024, an increase of 1.44 percentage points.\n\n\n---\n### Citations\n- [1] FMP \u2014 AMZN Income Statement (2025-12-31), Income Statement - FY 2025\n- [2] FMP \u2014 AMZN Income Statement (2024-12-31), Income Statement - FY 2024",
+            "grounding_score": 5,
+            "grounding_reasoning": "The answer is directly supported by the provided income statements: FY 2025 gross margin is 50.29% and FY 2024 gross margin is 48.85%. The conclusion that gross margin improved recently is therefore fully grounded in the context.",
+            "grounding_passed": true,
+            "citations": 4,
+            "has_citations": true,
+            "numbers_total": 0,
+            "numbers_verified": 0,
+            "pipeline_tokens": 4772,
+            "judge_tokens": 891
+          },
+          {
+            "capability": "Biggest risks (10-K)",
+            "question": "What are the biggest risks to Amazon's business according to their 10-K?",
+            "answer": "Amazon\u2019s 10-K highlights these biggest business risks:\n\n- **Intense competition** across retail, e-commerce services, cloud computing, devices, digital content, advertising, grocery, healthcare, communications, and logistics; competitors may have greater resources, longer histories, more customers, or stronger brand recognition, and may use more aggressive pricing and spend more on technology, infrastructure, fulfillment, and marketing.[1]\n- **Operational execution risk** from managing growth, fulfillment, sortation, delivery, data center optimization, inventory, demand variability, commercial agreements, acquisitions, payments, and throughput/productivity.[2]\n- **Customer and seller dependence**, since many of the same risks also affect third-party sellers and could indirectly hurt Amazon\u2019s business.[1][3][4][5]\n\nThis is data, not investment advice \u2014 consult a financial advisor for personal recommendations.\n\n\n---\n### Citations\n- [1] SEC \u2014 AMZN 10-K (2026-02-06), Financial Statements \u2192 https://www.sec.gov/Archives/edgar/data/1018724/000101872426000004/amzn-20251231.htm\n- [2] SEC \u2014 AMZN 10-Q (2025-05-02), Item 4 - Controls and Procedures \u2192 https://www.sec.gov/Archives/edgar/data/1018724/000101872425000036/amzn-20250331.htm\n- [3] SEC \u2014 AMZN 10-Q (2025-10-31), Item 4 - Controls and Procedures \u2192 https://www.sec.gov/Archives/edgar/data/1018724/000101872425000123/amzn-20250930.htm\n- [4] SEC \u2014 AMZN 10-Q (2024-05-01), Risk Factors \u2192 https://www.sec.gov/Archives/edgar/data/1018724/000101872424000083/amzn-20240331.htm\n- [5] SEC \u2014 AMZN 10-Q (2024-11-01), Risk Factors \u2192 https://www.sec.gov/Archives/edgar/data/1018724/000101872424000161/amzn-20240930.htm",
+            "grounding_score": 4,
+            "grounding_reasoning": "The main claims are directly supported by the 10-K/10-Q excerpts: Amazon explicitly says it faces intense competition across the listed business areas, that competitors may have greater resources and use aggressive pricing, and that many risks also affect customers including third-party sellers. The only weaker point is the \u201coperational execution risk\u201d bullet, which is not clearly supported by the provided 10-K excerpt and appears to rely on other sources, but the core risk summary is still largely grounded in the context.",
+            "grounding_passed": true,
+            "citations": 11,
+            "has_citations": true,
+            "numbers_total": 0,
+            "numbers_verified": 0,
+            "pipeline_tokens": 12289,
+            "judge_tokens": 3118
+          },
+          {
+            "capability": "Earnings announcement",
+            "question": "Summarize Amazon's most recent earnings announcement.",
+            "answer": "Amazon\u2019s most recent earnings announcement in the data provided is the February 5, 2026 guidance update. Amazon said first-quarter 2026 net sales are expected to be $173.5 billion to $178.5 billion, up 11% to 15% year over year, with about 180 basis points of foreign-exchange benefit[1]. Operating income is expected to be $16.5 billion to $21.5 billion, versus $18.4 billion in first-quarter 2025[1]. Amazon said this guidance includes about $1 billion of higher year-over-year Amazon Leo costs as it scales in 2026, plus investment in quick commerce and sharper prices in its international stores business[1].\n\nFor the latest reported full year, Amazon generated $716.92 billion of revenue in FY 2025, up from $637.96 billion in FY 2024[2][3]. Operating income rose to $79.97 billion from $68.59 billion, and net income increased to $77.67 billion from $59.25 billion[2][3]. Operating margin improved to 11.16% from 10.75%[2][3].\n\nCash flow was much tighter in FY 2025: operating cash flow was $139.51 billion, capital expenditures were $131.82 billion, and free cash flow was $7.70 billion, down from $32.88 billion in FY 2024[4][5]. Total debt increased to $152.99 billion from $130.90 billion, while cash and short-term investments rose to $123.03 billion from $101.20 billion[6][7].\n\n\n---\n### Citations\n- [1] SEC \u2014 AMZN 10-K (2026-02-06), Financial Statements \u2192 https://www.sec.gov/Archives/edgar/data/1018724/000101872426000004/amzn-20251231.htm\n- [2] FMP \u2014 AMZN Income Statement (2025-12-31), Income Statement - FY 2025\n- [3] FMP \u2014 AMZN Income Statement (2024-12-31), Income Statement - FY 2024\n- [4] FMP \u2014 AMZN Cash Flow Statement (2025-12-31), Cash Flow Statement - FY 2025\n- [5] FMP \u2014 AMZN Cash Flow Statement (2024-12-31), Cash Flow Statement - FY 2024\n- [6] FMP \u2014 AMZN Balance Sheet (2025-12-31), Balance Sheet - FY 2025\n- [7] FMP \u2014 AMZN Balance Sheet (2024-12-31), Balance Sheet - FY 2024",
+            "grounding_score": 4,
+            "grounding_reasoning": "Most of the answer is directly supported by the context: the February 5, 2026 guidance figures, the FY 2025 and FY 2024 revenue, operating income, net income, operating margin, cash flow, capex, debt, and cash balances all match the provided source data. The main issue is that the prompt asks for Amazon's most recent earnings announcement, but the answer blends a guidance update with full-year financial summary rather than clearly identifying the earnings release itself; still, the factual claims are grounded in the context.",
+            "grounding_passed": true,
+            "citations": 20,
+            "has_citations": true,
+            "numbers_total": 20,
+            "numbers_verified": 20,
+            "pipeline_tokens": 14758,
+            "judge_tokens": 4096
+          },
+          {
+            "capability": "YoY revenue comparison",
+            "question": "How does Amazon's most recent fiscal year revenue compare to the prior year?",
+            "answer": "Amazon\u2019s most recent fiscal year revenue was $716.92 billion[1], up from $637.96 billion[2] in the prior year. That\u2019s an increase of $78.96 billion, or about 12.4%.\n\n\n---\n### Citations\n- [1] FMP \u2014 AMZN Income Statement (2025-12-31), Income Statement - FY 2025\n- [2] FMP \u2014 AMZN Income Statement (2024-12-31), Income Statement - FY 2024",
+            "grounding_score": 5,
+            "grounding_reasoning": "The answer is fully supported by the provided context: FY 2025 revenue is $716.92 billion and FY 2024 revenue is $637.96 billion. The stated increase of $78.96 billion and approximately 12.4% is a correct calculation from those figures.",
+            "grounding_passed": true,
+            "citations": 4,
+            "has_citations": true,
+            "numbers_total": 3,
+            "numbers_verified": 3,
+            "pipeline_tokens": 4784,
+            "judge_tokens": 906
+          },
+          {
+            "capability": "Latest news",
+            "question": "What is the latest news about Amazon?",
+            "answer": "Examples include discounted Dove Men + Care bars, a Klein Tools power strip, a Yes4All grip strengthener, a Four Candies pencil case, and Cottonelle toilet paper deals sold on Amazon[1][2][3][4][5].\n\n\n---\n### Citations\n- [1] NEWS \u2014 AMZN News Article (2026-03-24), News - Slickdeals.net \u2192 https://slickdeals.net/f/19339122-dove-men-care-body-and-face-bar-to-clean-and-hydrate-skin-body-and-facial-cleanser-more-moisturizing-than-bar-soap-3-75-oz-8-bars-10-97-after-coupon-amazon\n- [2] NEWS \u2014 AMZN News Article (2026-03-24), News - Slickdeals.net \u2192 https://slickdeals.net/f/19338312-5-klein-tools-magnetic-surge-protector-power-strip-5x-120v-ac-1x-usb-c-2x-usb-a-40-free-s-h\n- [3] NEWS \u2014 AMZN News Article (2026-03-24), News - Slickdeals.net \u2192 https://slickdeals.net/f/19339095-8-52-yes4all-wrist-and-forearm-fitness-grip-strengthener-w-steel-roller-at-amazon\n- [4] NEWS \u2014 AMZN News Article (2026-03-24), News - Slickdeals.net \u2192 https://slickdeals.net/f/19339086-four-candies-3-compartment-large-pencil-case-w-removable-handle-5-99-free-shipping-w-prime-or-on-35\n- [5] NEWS \u2014 AMZN News Article (2026-03-24), News - Slickdeals.net \u2192 https://slickdeals.net/f/19339083-sns-52-42-2-24-pack-353-sheets-cottonelle-toilet-paper-family-mega-rolls-26-21-each-15-credit-at-amazon",
+            "grounding_score": 4,
+            "grounding_reasoning": "The answer is grounded in the context because it lists several Amazon deal/news items that are directly supported by Sources 1-5. Minor imprecision is acceptable: it summarizes these as examples of the latest news rather than explicitly stating they are deal posts, but the factual content itself matches the sources.",
+            "grounding_passed": true,
+            "citations": 10,
+            "has_citations": true,
+            "numbers_total": 0,
+            "numbers_verified": 0,
+            "pipeline_tokens": 8160,
+            "judge_tokens": 1789
+          },
+          {
+            "capability": "Business segments",
+            "question": "What are Amazon's main business segments and revenue drivers?",
+            "answer": "Amazon\u2019s principal revenue generating activities are retail sales, third-party seller services, advertising services, subscription services, AWS, and other[1]. North America primarily includes retail sales of consumer products plus advertising and subscription services through North America-focused online and physical stores[1]. International is the same model outside North America[1]. AWS is the cloud segment, with revenue from global sales of compute, storage, database, and other services to start-ups, enterprises, government agencies, and academic institutions[1].\n\nThe biggest drivers are retail sales, third-party seller services, AWS, advertising, and Prime/subscription services[1].\n\n\n---\n### Citations\n- [1] SEC \u2014 AMZN 10-K (2025-02-07), Financial Statements \u2192 https://www.sec.gov/Archives/edgar/data/1018724/000101872425000004/amzn-20241231.htm",
+            "grounding_score": 4,
+            "grounding_reasoning": "The answer is largely supported by the context: the listed principal revenue-generating activities match the 10-K, and the descriptions of retail sales, third-party seller services, advertising, subscription services, and AWS are consistent with the source. The segment summary is also grounded in the segment information, though the phrasing that North America and International are the \u201csame model\u201d is a slight simplification not stated verbatim in the context.",
+            "grounding_passed": true,
+            "citations": 6,
+            "has_citations": true,
+            "numbers_total": 0,
+            "numbers_verified": 0,
+            "pipeline_tokens": 14010,
+            "judge_tokens": 3128
+          },
+          {
+            "capability": "Analyst EPS estimates",
+            "question": "What are analyst EPS estimates for Amazon?",
+            "answer": "Analyst EPS estimates for Amazon are $9.42 low, $11.84 average, and $13.19 high for the period ending 2028-12-31[1]. For 2029-12-31, EPS estimates are $13.64 low, $14.20 average, and $15.04 high[2]. For 2030-12-31, EPS estimates are $16.39 low, $17.07 average, and $18.08 high[3].\n\n\n---\n### Citations\n- [1] FMP \u2014 AMZN Analyst Estimates (2028-12-31), Analyst Estimates - 2028-12-31\n- [2] FMP \u2014 AMZN Analyst Estimates (2029-12-31), Analyst Estimates - 2029-12-31\n- [3] FMP \u2014 AMZN Analyst Estimates (2030-12-31), Analyst Estimates - 2030-12-31",
+            "grounding_score": 4,
+            "grounding_reasoning": "The EPS figures for 2028, 2029, and 2030 exactly match the context sources provided. The answer is well grounded, though it omits that the context also includes 2027 estimates, which is a completeness issue rather than a factual error.",
+            "grounding_passed": true,
+            "citations": 6,
+            "has_citations": true,
+            "numbers_total": 9,
+            "numbers_verified": 9,
+            "pipeline_tokens": 5070,
+            "judge_tokens": 1226
+          },
+          {
+            "capability": "R&D spending",
+            "question": "How much does Amazon invest in research and development?",
+            "answer": "Amazon spent $108.52 billion on research and development in FY 2025[1], up from $88.54 billion in FY 2024[2]. That\u2019s an increase of $19.98 billion, or about 22.6%.\n\n\n---\n### Citations\n- [1] FMP \u2014 AMZN Income Statement (2025-12-31), Income Statement - FY 2025\n- [2] FMP \u2014 AMZN Income Statement (2024-12-31), Income Statement - FY 2024",
+            "grounding_score": 5,
+            "grounding_reasoning": "The answer\u2019s figures for Amazon\u2019s FY 2025 and FY 2024 research and development spending exactly match the context sources. The computed increase of $19.98 billion and roughly 22.6% is also mathematically consistent with those values.",
+            "grounding_passed": true,
+            "citations": 4,
+            "has_citations": true,
+            "numbers_total": 3,
+            "numbers_verified": 3,
+            "pipeline_tokens": 5229,
+            "judge_tokens": 1343
+          },
+          {
+            "capability": "Debt situation",
+            "question": "What is Amazon's total debt and how much is long-term?",
+            "answer": "Amazon\u2019s total debt is $152.99 billion[1], and long-term debt is $65.65 billion[1].\n\n\n---\n### Citations\n- [1] FMP \u2014 AMZN Balance Sheet (2025-12-31), Balance Sheet - FY 2025",
+            "grounding_score": 5,
+            "grounding_reasoning": "The answer exactly matches the FY 2025 balance sheet in the context: Total Debt is $152.99 billion and Long-Term Debt is $65.65 billion. Both figures are directly supported by Source 1, so the response is fully grounded.",
+            "grounding_passed": true,
+            "citations": 3,
+            "has_citations": true,
+            "numbers_total": 2,
+            "numbers_verified": 2,
+            "pipeline_tokens": 4909,
+            "judge_tokens": 999
+          }
+        ]
+      },
+      "accuracy": {
+        "citations_present": 10,
+        "numbers_verified": 45,
+        "numbers_total": 45,
+        "total": 10
+      }
+    },
+    "cost": {
+      "pipeline_tokens": 145961,
+      "judge_tokens": 22979,
+      "total_tokens": 168940
+    }
+  },
+  "smoke_test": {
+    "tickers": [
+      "MSFT"
+    ],
+    "ticker_results": {
+      "MSFT": {
+        "passed": 3,
+        "total": 3,
+        "details": [
+          {
+            "capability": "Revenue",
+            "question": "What are MSFT's revenue trends over the past two years?",
+            "citations": 6,
+            "source_count": 0,
+            "thin_context": true,
+            "passed": true,
+            "tokens": 4845
+          },
+          {
+            "capability": "Risks",
+            "question": "What are the biggest risks to MSFT's business?",
+            "citations": 28,
+            "source_count": 7,
+            "thin_context": false,
+            "passed": true,
+            "tokens": 11990
+          },
+          {
+            "capability": "News",
+            "question": "What is the latest news about MSFT?",
+            "citations": 6,
+            "source_count": 0,
+            "thin_context": true,
+            "passed": true,
+            "tokens": 5131
+          }
+        ]
+      }
+    },
+    "boundary_refusals": {
+      "passed": 6,
+      "total": 6,
+      "details": [
+        {
+          "name": "Private company",
+          "question": "What is Stripe's revenue?",
+          "answer": "Stripe\u2019s revenue is not available.",
+          "has_dollar_amounts": false,
+          "has_refusal": true,
+          "refusal_reasoning": "The answer explicitly states the requested revenue information is not available.",
+          "passed": true,
+          "tokens": 4337
+        },
+        {
+          "name": "Unknown company",
+          "question": "What is Cred's financial performance?",
+          "answer": "Cred\u2019s financial performance is not available from the data I could retrieve.",
+          "has_dollar_amounts": false,
+          "has_refusal": true,
+          "refusal_reasoning": "The analyst explicitly states that Cred\u2019s financial performance data is not available from the information they could retrieve.",
+          "passed": true,
+          "tokens": 6734
+        },
+        {
+          "name": "Speculative",
+          "question": "What will Apple's stock price be next month?",
+          "answer": "I can\u2019t predict Apple\u2019s stock price next month. The current live quote is not available.",
+          "has_dollar_amounts": false,
+          "has_refusal": true,
+          "refusal_reasoning": "The analyst explicitly declines to predict Apple\u2019s stock price and states the current live quote is unavailable.",
+          "passed": true,
+          "tokens": 4310
+        },
+        {
+          "name": "Old data",
+          "question": "What was Apple's revenue in 2015?",
+          "answer": "Apple\u2019s 2015 revenue is not available from the returned data.",
+          "has_dollar_amounts": false,
+          "has_refusal": true,
+          "refusal_reasoning": "The answer explicitly states that Apple\u2019s 2015 revenue is not available from the returned data.",
+          "passed": true,
+          "tokens": 6725
+        },
+        {
+          "name": "Long trend",
+          "question": "Show me Amazon's 5-year revenue trend.",
+          "answer": "Amazon\u2019s 5-year revenue trend is not available from the data returned.",
+          "has_dollar_amounts": false,
+          "has_refusal": true,
+          "refusal_reasoning": "The answer explicitly states the requested 5-year revenue trend information is not available from the provided data.",
+          "passed": true,
+          "tokens": 6719
+        },
+        {
+          "name": "Out of window",
+          "question": "Compare Tesla's 2018 and 2019 earnings.",
+          "answer": "I couldn\u2019t retrieve Tesla\u2019s 2018 and 2019 earnings data from the available sources.",
+          "has_dollar_amounts": false,
+          "has_refusal": true,
+          "refusal_reasoning": "The analyst explicitly states they could not retrieve the requested earnings data from available sources.",
+          "passed": true,
+          "tokens": 6746
+        }
+      ]
+    },
+    "cost": {
+      "total_tokens": 58680
+    }
+  }
+}

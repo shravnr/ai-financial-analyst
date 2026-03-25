@@ -25,6 +25,3 @@ build/
 # OS
 .DS_Store
 Thumbs.db
-
-# Evaluation outputs
-eval_results/
