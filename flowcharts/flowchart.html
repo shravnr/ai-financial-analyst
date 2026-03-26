@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Financial Analyst — System Flow</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: system-ui, -apple-system, sans-serif; background: #fff; color: #1a1a1a; padding: 40px; }
+  h1 { font-size: 22px; font-weight: 700; margin-bottom: 32px; color: #111; }
+
+  .flow { display: flex; flex-direction: column; align-items: center; gap: 0; max-width: 900px; margin: 0 auto; }
+
+  /* Connectors */
+  .arrow { width: 2px; height: 20px; background: #999; position: relative; }
+  .arrow::after { content: ''; position: absolute; bottom: -5px; left: -4px; width: 0; height: 0; border-left: 5px solid transparent; border-right: 5px solid transparent; border-top: 6px solid #999; }
+
+  /* Nodes */
+  .node { border: 2px solid; border-radius: 8px; padding: 12px 20px; text-align: center; max-width: 480px; width: 100%; }
+  .node-label { font-size: 14px; font-weight: 600; }
+  .node-sub { font-size: 12px; color: #666; margin-top: 3px; }
+
+  /* 3 colors: blue (process), orange (decision), green (start/end) */
+  .node.process { border-color: #2563eb; background: #eff6ff; }
+  .node.decision { border-color: #d97706; background: #fffbeb; }
+  .node.terminal { border-color: #16a34a; background: #f0fdf4; }
+
+  /* Decision label */
+  .decision-tag { font-size: 10px; font-weight: 700; color: #d97706; letter-spacing: 0.04em; text-transform: uppercase; margin-bottom: 4px; }
+
+  /* Branch layout */
+  .branch { display: flex; gap: 24px; justify-content: center; align-items: flex-start; width: 100%; }
+  .branch-col { display: flex; flex-direction: column; align-items: center; gap: 0; flex: 1; min-width: 0; }
+  .branch-col .node { max-width: 100%; font-size: 12px; }
+  .branch-col .node-label { font-size: 12px; }
+  .branch-col .node-sub { font-size: 11px; }
+
+  /* Horizontal connector */
+  .h-line { height: 2px; background: #999; flex: 1; min-width: 20px; align-self: center; }
+  .branch-top { display: flex; width: 100%; align-items: center; margin-bottom: 0; }
+  .branch-top .h-line { flex: 1; }
+  .branch-top .dot { width: 8px; height: 8px; background: #999; border-radius: 50%; }
+
+  /* Section dividers */
+  .phase { display: flex; align-items: center; gap: 12px; width: 100%; max-width: 700px; margin: 28px 0 16px; }
+  .phase-label { font-size: 11px; font-weight: 700; color: #2563eb; letter-spacing: 0.06em; text-transform: uppercase; white-space: nowrap; }
+  .phase-line { flex: 1; height: 1px; background: #ddd; }
+
+  /* Loopback */
+  .loopback { font-size: 11px; color: #888; font-style: italic; margin-top: 4px; }
+
+  /* Tool grid */
+  .tool-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; width: 100%; max-width: 600px; }
+  .tool-grid .node { max-width: 100%; }
+</style>
+</head>
+<body>
+
+<h1>AI Financial Analyst Chatbot — System Flow</h1>
+
+<div class="flow">
+
+  <!-- Phase 1: Input & Routing -->
+  <div class="phase"><span class="phase-label">1 &middot; Input & Routing</span><div class="phase-line"></div></div>
+
+  <div class="node terminal">
+    <div class="node-label">User types question</div>
+    <div class="node-sub">CLI prompt via Rich console</div>
+  </div>
+  <div class="arrow"></div>
+
+  <div class="node process">
+    <div class="node-label">Router classifies intent</div>
+    <div class="node-sub">gpt-5.4-nano &rarr; JSON: {type, ticker, company}</div>
+  </div>
+  <div class="arrow"></div>
+
+  <div class="node decision">
+    <div class="decision-tag">Decision</div>
+    <div class="node-label">Intent type?</div>
+  </div>
+  <div class="arrow"></div>
+
+  <div class="branch">
+    <div class="branch-col">
+      <div class="node terminal" style="border-color: #dc2626; background: #fef2f2;">
+        <div class="node-label">Farewell</div>
+        <div class="node-sub">Goodbye, exit</div>
+      </div>
+    </div>
+    <div class="branch-col">
+      <div class="node process">
+        <div class="node-label">Chat</div>
+        <div class="node-sub">Respond, loop back</div>
+      </div>
+    </div>
+    <div class="branch-col">
+      <div class="node process" style="border-width: 3px;">
+        <div class="node-label">Financial &darr;</div>
+        <div class="node-sub">Extract ticker, continue</div>
+      </div>
+    </div>
+  </div>
+  <div class="arrow"></div>
+
+  <!-- Phase 2: Company Detection -->
+  <div class="phase"><span class="phase-label">2 &middot; Company Detection</span><div class="phase-line"></div></div>
+
+  <div class="node decision">
+    <div class="decision-tag">Decision</div>
+    <div class="node-label">Ticker found?</div>
+    <div class="node-sub">Yes &rarr; continue &nbsp;|&nbsp; No + company name &rarr; "I don't have data for X" &nbsp;|&nbsp; No + previous session &rarr; reuse &nbsp;|&nbsp; No context &rarr; "Which company?"</div>
+  </div>
+  <div class="arrow"></div>
+
+  <!-- Phase 3: Company Loading -->
+  <div class="phase"><span class="phase-label">3 &middot; Company Loading</span><div class="phase-line"></div></div>
+
+  <div class="node decision">
+    <div class="decision-tag">Decision</div>
+    <div class="node-label">Ticker indexed in ChromaDB?</div>
+  </div>
+  <div class="arrow"></div>
+
+  <div class="branch">
+    <div class="branch-col">
+      <div class="node process" style="border-width: 3px;">
+        <div class="node-label">Yes &darr;</div>
+        <div class="node-sub">Skip to question validation</div>
+      </div>
+    </div>
+    <div class="branch-col">
+      <div class="node process">
+        <div class="node-label">No &rarr; Ingest &amp; Index</div>
+        <div class="node-sub">EDGAR download &rarr; chunk (3000 chars, section detection) &rarr; embed (text-embedding-3-small) &rarr; ChromaDB</div>
+      </div>
+    </div>
+  </div>
+  <div class="arrow"></div>
+
+  <!-- Phase 4: Question Validation -->
+  <div class="phase"><span class="phase-label">4 &middot; Question Validation</span><div class="phase-line"></div></div>
+
+  <div class="node decision">
+    <div class="decision-tag">Decision</div>
+    <div class="node-label">Real question or bare ticker?</div>
+    <div class="node-sub">Bare ticker &rarr; "What would you like to know?" &nbsp;|&nbsp; Real question &rarr; continue</div>
+  </div>
+  <div class="arrow"></div>
+
+  <!-- Phase 5: Agentic Tool Loop -->
+  <div class="phase"><span class="phase-label">5 &middot; Agentic Tool Loop</span><div class="phase-line"></div></div>
+
+  <div class="node process" style="border-width: 3px;">
+    <div class="node-label">LLM decides what to fetch</div>
+    <div class="node-sub">gpt-5.4-mini reads question + system prompt + 4 tool definitions &nbsp;|&nbsp; Up to 3 iterations</div>
+  </div>
+  <div class="arrow"></div>
+
+  <div class="node decision">
+    <div class="decision-tag">Decision</div>
+    <div class="node-label">Call tools or generate answer?</div>
+    <div class="node-sub">If answer ready &rarr; skip to guardrails &nbsp;|&nbsp; If needs data &rarr; call tool(s) below</div>
+  </div>
+  <div class="arrow"></div>
+
+  <div class="tool-grid">
+    <div class="node process">
+      <div class="node-label">search_sec_filings</div>
+      <div class="node-sub">Hybrid: ~20 vector + ~20 BM25 &rarr; RRF merge &rarr; 8-12 chunks + data boundary</div>
+    </div>
+    <div class="node process">
+      <div class="node-label">get_financial_data</div>
+      <div class="node-sub">Live FMP API &mdash; LLM picks from 7 categories, last 2 fiscal years each</div>
+    </div>
+    <div class="node process">
+      <div class="node-label">get_news</div>
+      <div class="node-sub">Live NewsAPI &mdash; 15 articles &rarr; keyword relevance &rarr; top 5</div>
+    </div>
+    <div class="node process">
+      <div class="node-label">get_stock_quote</div>
+      <div class="node-sub">Live FMP &mdash; price, volume, market cap</div>
+    </div>
+  </div>
+
+  <div class="loopback">&uarr; Tool results added to conversation &mdash; LLM can call more tools or answer</div>
+  <div class="arrow"></div>
+
+  <!-- Phase 6: Guardrails -->
+  <div class="phase"><span class="phase-label">6 &middot; Guardrails</span><div class="phase-line"></div></div>
+
+  <div class="node process">
+    <div class="node-label">Rule-based checks</div>
+    <div class="node-sub">Citation check (uncited numbers?) &nbsp;|&nbsp; Number verification (traceable to sources within 1%?) &nbsp;|&nbsp; Sufficiency check (thin context?)</div>
+  </div>
+  <div class="arrow"></div>
+
+  <div class="node process">
+    <div class="node-label">LLM grounding check</div>
+    <div class="node-sub">gpt-5.4-nano extracts top 3 claims, verifies each against source context</div>
+  </div>
+  <div class="arrow"></div>
+
+  <div class="node decision">
+    <div class="decision-tag">Decision</div>
+    <div class="node-label">Warnings found?</div>
+  </div>
+  <div class="arrow"></div>
+
+  <div class="branch">
+    <div class="branch-col">
+      <div class="node process" style="border-width: 3px;">
+        <div class="node-label">No &darr;</div>
+        <div class="node-sub">Clean &mdash; proceed</div>
+      </div>
+    </div>
+    <div class="branch-col">
+      <div class="node process">
+        <div class="node-label">Yes &rarr; Self-correction</div>
+        <div class="node-sub">Feed warnings back to LLM &rarr; get corrected answer &rarr; re-validate &rarr; accept only if warnings decrease</div>
+      </div>
+    </div>
+  </div>
+  <div class="arrow"></div>
+
+  <!-- Phase 7: Citation Postprocessing & Output -->
+  <div class="phase"><span class="phase-label">7 &middot; Citation Postprocessing & Output</span><div class="phase-line"></div></div>
+
+  <div class="node process">
+    <div class="node-label">Strip LLM-generated footnotes</div>
+    <div class="node-sub">Remove any citations/references sections the LLM added on its own</div>
+  </div>
+  <div class="arrow"></div>
+
+  <div class="node process">
+    <div class="node-label">Rebuild citations from real source metadata</div>
+    <div class="node-sub">SEC &rarr; EDGAR URLs &nbsp;|&nbsp; FMP &rarr; statement type + date &nbsp;|&nbsp; News &rarr; article links &nbsp;|&nbsp; Renumber sequentially</div>
+  </div>
+  <div class="arrow"></div>
+
+  <div class="node terminal">
+    <div class="node-label">Display answer with citations</div>
+    <div class="node-sub">Rich Markdown body + citation block &rarr; loop back to user input</div>
+  </div>
+
+</div>
+
+</body>
+</html>

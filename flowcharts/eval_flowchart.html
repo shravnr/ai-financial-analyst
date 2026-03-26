@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Financial Analyst — Eval Flow</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: system-ui, -apple-system, sans-serif; background: #fff; color: #1a1a1a; padding: 40px; }
+  h1 { font-size: 22px; font-weight: 700; margin-bottom: 32px; color: #111; }
+
+  .flow { display: flex; flex-direction: column; align-items: center; gap: 0; max-width: 900px; margin: 0 auto; }
+
+  /* Connectors */
+  .arrow { width: 2px; height: 20px; background: #999; position: relative; }
+  .arrow::after { content: ''; position: absolute; bottom: -5px; left: -4px; width: 0; height: 0; border-left: 5px solid transparent; border-right: 5px solid transparent; border-top: 6px solid #999; }
+
+  /* Nodes */
+  .node { border: 2px solid; border-radius: 8px; padding: 12px 20px; text-align: center; max-width: 480px; width: 100%; }
+  .node-label { font-size: 14px; font-weight: 600; }
+  .node-sub { font-size: 12px; color: #666; margin-top: 3px; }
+
+  .node.process { border-color: #2563eb; background: #eff6ff; }
+  .node.decision { border-color: #d97706; background: #fffbeb; }
+  .node.terminal { border-color: #16a34a; background: #f0fdf4; }
+
+  .decision-tag { font-size: 10px; font-weight: 700; color: #d97706; letter-spacing: 0.04em; text-transform: uppercase; margin-bottom: 4px; }
+
+  /* Branch layout */
+  .branch { display: flex; gap: 24px; justify-content: center; align-items: flex-start; width: 100%; }
+  .branch-col { display: flex; flex-direction: column; align-items: center; gap: 0; flex: 1; min-width: 0; }
+  .branch-col .node { max-width: 100%; }
+  .branch-col .node-label { font-size: 12px; }
+  .branch-col .node-sub { font-size: 11px; }
+
+  /* Section dividers */
+  .phase { display: flex; align-items: center; gap: 12px; width: 100%; max-width: 700px; margin: 28px 0 16px; }
+  .phase-label { font-size: 11px; font-weight: 700; color: #2563eb; letter-spacing: 0.06em; text-transform: uppercase; white-space: nowrap; }
+  .phase-line { flex: 1; height: 1px; background: #ddd; }
+
+  /* Signal grid */
+  .signal-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; width: 100%; max-width: 780px; }
+  .signal-grid .node { max-width: 100%; }
+  .signal-grid .node-label { font-size: 12px; }
+  .signal-grid .node-sub { font-size: 11px; }
+
+  .two-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; width: 100%; max-width: 600px; }
+  .two-grid .node { max-width: 100%; }
+  .two-grid .node-label { font-size: 12px; }
+  .two-grid .node-sub { font-size: 11px; }
+
+  .loopback { font-size: 11px; color: #888; font-style: italic; margin-top: 4px; }
+</style>
+</head>
+<body>
+
+<h1>Eval Framework — Flow</h1>
+
+<div class="flow">
+
+  <!-- Phase 1: Setup -->
+  <div class="phase"><span class="phase-label">1 &middot; Setup</span><div class="phase-line"></div></div>
+
+  <div class="node terminal">
+    <div class="node-label">Run eval</div>
+    <div class="node-sub">python -m src.evaluation.run_eval</div>
+  </div>
+  <div class="arrow"></div>
+
+  <div class="node process">
+    <div class="node-label">Auto-ingest tickers if not indexed</div>
+    <div class="node-sub">Deep eval: AMZN &nbsp;|&nbsp; Smoke: random from {AAPL, MSFT, GOOGL} &nbsp;|&nbsp; EDGAR download &rarr; chunk &rarr; embed &rarr; ChromaDB</div>
+  </div>
+  <div class="arrow"></div>
+
+  <!-- Phase 2: Deep Eval -->
+  <div class="phase"><span class="phase-label">2 &middot; Deep Eval (AMZN) — LLM-as-judge</span><div class="phase-line"></div></div>
+
+  <div class="node process" style="border-width: 3px;">
+    <div class="node-label">Run templatized questions through the live system</div>
+    <div class="node-sub">Questions use {company} placeholder &mdash; works for any ticker without rewriting</div>
+  </div>
+  <div class="arrow"></div>
+
+  <div class="signal-grid">
+    <div class="node process">
+      <div class="node-label">Signal 1: Consistency</div>
+      <div class="node-sub">4 question pairs &mdash; same question, different phrasing &rarr; ask gpt-5.4-mini: do both answers agree? Score 1&ndash;5 per pair</div>
+    </div>
+    <div class="node process">
+      <div class="node-label">Signal 2: Grounding</div>
+      <div class="node-sub">10 capability questions &rarr; ask gpt-5.4-mini: is every claim supported by the retrieved context? Score 1&ndash;5 per question</div>
+    </div>
+    <div class="node process">
+      <div class="node-label">Signal 3: Boundary</div>
+      <div class="node-sub">Questions the system must refuse (future price prediction, unknown ticker) &rarr; check: no fabricated $ amounts + classified as refusal</div>
+    </div>
+  </div>
+  <div class="arrow"></div>
+
+  <!-- Phase 3: Rule-based -->
+  <div class="phase"><span class="phase-label">3 &middot; Rule-based signals</span><div class="phase-line"></div></div>
+
+  <div class="two-grid">
+    <div class="node process">
+      <div class="node-label">Signal 4: Verification</div>
+      <div class="node-sub">Citation check: does every answer have [N] citations? &nbsp;|&nbsp; Number check: every $ amount traceable to source within 1%?</div>
+    </div>
+    <div class="node process">
+      <div class="node-label">Signal 5: Smoke test</div>
+      <div class="node-sub">Basic questions on second ticker (random from pool) &rarr; pass if citations present &nbsp;|&nbsp; flags thin context (&le;1 source)</div>
+    </div>
+  </div>
+  <div class="arrow"></div>
+
+  <!-- Phase 4: Scoring -->
+  <div class="phase"><span class="phase-label">4 &middot; Scoring</span><div class="phase-line"></div></div>
+
+  <div class="node process">
+    <div class="node-label">Normalize all signals to 0&ndash;10</div>
+    <div class="node-sub">LLM-judge avg: (Consistency + Grounding + Boundary) / 3 &nbsp;|&nbsp; Rule-based avg: (Verification + Smoke) / 2</div>
+  </div>
+  <div class="arrow"></div>
+
+  <div class="node process">
+    <div class="node-label">Master score = avg(LLM-judge, Rule-based)</div>
+    <div class="node-sub">AMZN: 9.7 / 10 &nbsp;|&nbsp; AAPL: 9.5 / 10</div>
+  </div>
+  <div class="arrow"></div>
+
+  <div class="node decision">
+    <div class="decision-tag">Decision</div>
+    <div class="node-label">Master score &ge; 8.5?</div>
+  </div>
+  <div class="arrow"></div>
+
+  <div class="branch">
+    <div class="branch-col">
+      <div class="node terminal">
+        <div class="node-label">PASS &#10003;</div>
+        <div class="node-sub">Save results to eval_results/ &rarr; acts as regression gate for future changes</div>
+      </div>
+    </div>
+    <div class="branch-col">
+      <div class="node terminal" style="border-color: #dc2626; background: #fef2f2;">
+        <div class="node-label">FAIL &#10007;</div>
+        <div class="node-sub">Print failures &amp; flags &rarr; diagnose which signal dropped &rarr; fix retrieval / prompts / guardrails</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+</body>
+</html>
